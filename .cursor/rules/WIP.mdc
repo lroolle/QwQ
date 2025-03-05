@@ -1,0 +1,10 @@
+---
+description: WIP
+globs: *
+---
+
+- [X] Initialize project structure for Cloudflare Pages
+- [X] Create main index.html with auto-routing capability
+- [X] Add sample topic pages to demonstrate routing
+- [X] Setup CSS for basic styling
+- [X] Create README with deployment instructions 

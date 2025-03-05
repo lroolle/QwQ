@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Topic Static Site</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <!-- Simple responsive meta tag -->
+    <meta name="description" content="A multi-topic static site with auto-routing">
+</head>
+<body>
+    <header>
+        <nav id="main-nav">
+            <div class="container">
+                <h1 class="site-title">Topic Explorer</h1>
+                <div id="nav-links">
+                    <!-- Navigation will be dynamically populated -->
+                    <a href="/" class="active">Home</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="content" class="container">
+        <!-- Content will be loaded here -->
+        <div id="home-content">
+            <h2>Welcome to the Topic Explorer</h2>
+            <p>Select a topic from the navigation or explore the available pages below:</p>
+            
+            <div id="page-list" class="grid">
+                <!-- Page listing will be populated automatically -->
+                <div class="loading">Loading available topics...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Topic Explorer. Hosted on Cloudflare Pages.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Auto-routing and navigation system
+        (async function() {
+            const pageList = document.getElementById('page-list');
+            const navLinks = document.getElementById('nav-links');
+            const contentArea = document.getElementById('content');
+            
+            // Fetch and display available pages
+            async function loadAvailablePages() {
+                try {
+                    // This would typically come from an API or static manifest
+                    // In this simple version, we'll hardcode some examples
+                    // and allow for discovery of future pages
+                    const pages = await discoverPages();
+                    
+                    if (pages.length === 0) {
+                        pageList.innerHTML = '<p>No topics available yet.</p>';
+                        return;
+                    }
+
+                    // Clear loading message
+                    pageList.innerHTML = '';
+                    
+                    // Generate nav and page cards
+                    pages.forEach(page => {
+                        // Create navigation link
+                        if (page.path !== '/') {
+                            const navLink = document.createElement('a');
+                            navLink.href = page.path;
+                            navLink.textContent = page.title;
+                            navLinks.appendChild(navLink);
+                        }
+
+                        // Create page card
+                        if (page.path !== '/') {
+                            const card = document.createElement('div');
+                            card.className = 'card';
+                            card.innerHTML = `
+                                <h3>${page.title}</h3>
+                                <p>${page.description}</p>
+                                <a href="${page.path}" class="btn">Explore</a>
+                            `;
+                            pageList.appendChild(card);
+                        }
+                    });
+
+                    // Setup routing
+                    setupRouting();
+                } catch (error) {
+                    console.error('Error loading pages:', error);
+                    pageList.innerHTML = '<p>Error loading topics. Please try again later.</p>';
+                }
+            }
+
+            // Function to discover available pages
+            async function discoverPages() {
+                // For a real implementation, this would be dynamic
+                // For this demo, we'll return some sample pages
+                // and you can add more pages to the "pages" directory later
+                
+                // You could implement dynamic discovery by:
+                // 1. Using a fetch to a JSON manifest file
+                // 2. Server-side directory listing (requires server config)
+                // 3. Hard-coding known pages and paths
+                
+                // Start with home page
+                const pages = [
+                    {
+                        path: '/',
+                        title: 'Home',
+                        description: 'Main page'
+                    }
+                ];
+                
+                // Add sample topics (to be replaced with your actual content)
+                const sampleTopics = [
+                    {
+                        path: '/pages/topic1.html',
+                        title: 'Topic 1',
+                        description: 'Information about the first topic'
+                    },
+                    {
+                        path: '/pages/topic2.html',
+                        title: 'Topic 2',
+                        description: 'Information about the second topic'
+                    }
+                ];
+                
+                // Check if the sample topics actually exist
+                // and add any other pages found in the pages directory
+                // (This is a simplified version - in production, you'd use a server-side solution or manifest)
+                
+                return [...pages, ...sampleTopics];
+            }
+
+            // Setup client-side routing for single-page feeling
+            function setupRouting() {
+                // Handle navigation without page reloads
+                document.addEventListener('click', function(e) {
+                    // Only handle clicks on internal links
+                    const link = e.target.closest('a');
+                    if (link && link.href.startsWith(window.location.origin) && 
+                        !link.getAttribute('target') && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        navigateTo(link.href);
+                    }
+                });
+
+                // Handle browser back/forward buttons
+                window.addEventListener('popstate', () => {
+                    loadContent(window.location.pathname);
+                });
+
+                // Initial content load
+                loadContent(window.location.pathname);
+            }
+
+            // Navigate to a new URL without page reload
+            function navigateTo(url) {
+                const path = new URL(url).pathname;
+                history.pushState({}, '', url);
+                loadContent(path);
+            }
+
+            // Load content based on current path
+            async function loadContent(path) {
+                // Update active navigation
+                const navLinks = document.querySelectorAll('#nav-links a');
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === path);
+                });
+
+                // Show/hide home content
+                const homeContent = document.getElementById('home-content');
+                
+                if (path === '/' || path === '/index.html') {
+                    homeContent.style.display = 'block';
+                    return;
+                }
+                
+                // Hide home content
+                homeContent.style.display = 'none';
+                
+                // Show loading indicator
+                contentArea.innerHTML = '<div class="loading">Loading content...</div>';
+                
+                try {
+                    // Fetch and display page content
+                    const response = await fetch(path);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error ${response.status}`);
+                    }
+                    
+                    const html = await response.text();
+                    
+                    // Extract just the content section
+                    // This assumes your content pages follow a specific format
+                    // You may need to adjust this based on your page structure
+                    const tempElement = document.createElement('div');
+                    tempElement.innerHTML = html;
+                    
+                    // Try to find main content section, or use the entire body
+                    const pageContent = tempElement.querySelector('main') || 
+                                       tempElement.querySelector('body') || 
+                                       tempElement;
+                    
+                    contentArea.innerHTML = pageContent.innerHTML;
+                } catch (error) {
+                    console.error('Error loading content:', error);
+                    contentArea.innerHTML = `
+                        <div class="error">
+                            <h2>Error Loading Content</h2>
+                            <p>The requested page could not be loaded. It may not exist yet.</p>
+                            <a href="/" class="btn">Return Home</a>
+                        </div>
+                    `;
+                }
+            }
+
+            // Initialize
+            loadAvailablePages();
+        })();
+    </script>
+</body>
+</html> 
