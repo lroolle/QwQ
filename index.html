@@ -149,6 +149,93 @@
                 grid-template-columns: 1fr;
                 padding: 1rem;
             }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .demo-card {
+                height: 350px;
+            }
+
+            .demo-title {
+                font-size: 1.3rem;
+            }
+
+            .demo-description {
+                font-size: 0.9rem;
+            }
+
+            .category-sphere {
+                bottom: 20px;
+                right: 20px;
+                top: auto;
+                transform: none;
+            }
+
+            .sphere-menu {
+                position: fixed;
+                bottom: 100px;
+                right: 20px;
+                top: auto;
+                transform: none;
+                flex-direction: column-reverse;
+                gap: 10px;
+            }
+
+            .category-item {
+                width: 50px;
+                height: 50px;
+                font-size: 0.7rem;
+            }
+
+            .category-icon {
+                font-size: 1.5rem;
+                margin-bottom: 2px;
+            }
+
+            .category-text {
+                display: none;
+            }
+
+            .sphere-toggle {
+                width: 50px;
+                height: 50px;
+            }
+
+            .page-title {
+                font-size: 1.2rem;
+                top: 20px;
+                left: 20px;
+                padding: 10px;
+            }
+
+            .demo-link {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .demo-container {
+                gap: 1rem;
+            }
+
+            .demo-card {
+                height: 300px;
+            }
+
+            header {
+                padding: 1.5rem;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
         }
 
         /* 悬浮分类球样式 */
