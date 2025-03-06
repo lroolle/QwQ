@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绘制你的心 | QwQ粒子特效</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* 悬浮球导航样式 */
+        .nav-spheres {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-sphere:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .nav-sphere.active {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 内容区域样式 */
+        .section {
+            min-height: 100vh;
+            padding: 4rem 2rem 2rem;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* 代码展示样式 */
+        .code-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 4rem auto 2rem;
+            max-width: 800px;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-block {
+            font-family: monospace;
+            white-space: pre;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .function { color: #dcdcaa; }
+        .code-block .property { color: #9cdcfe; }
+
+        /* 预览视频样式 */
+        .preview-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            border-radius: 15px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .preview-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        /* 体验区域样式 */
+        .demo-container {
+            height: 80vh;
+            margin: 4rem auto;
+            max-width: 1200px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* 特效样式 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-effect 1.2s ease-out;
+            pointer-events: none;
+        }
+        
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ff4d4d);
+            transform: rotate(45deg);
+            animation: float-effect 3s linear infinite;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #ffd700;
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple-effect {
+            100% { transform: scale(3); opacity: 0; }
+        }
+        
+        @keyframes float-effect {
+            0%, 100% { transform: translateY(0) rotate(45deg); }
+            50% { transform: translateY(-20px) rotate(45deg); }
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* 更新标题样式 */
+        .page-title {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            transform: none;
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            text-align: left;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.2;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .page-title span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            font-weight: 300;
+            position: relative;
+        }
+
+        .page-title span::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            width: 20px;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 107, 107, 0.5), transparent);
+        }
+
+        /* 方片样式 */
+        .square {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .square.connected {
+            background: #ff4d4d;
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.5);
+        }
+
+        .heart-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 107, 107, 0.5);
+            pointer-events: none;
+            transform-origin: left center;
+        }
+
+        /* 更新提示文本样式 */
+        .demo-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.1rem;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            transition: opacity 0.5s ease;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+
+        /* 添加QwQ链接样式 */
+        .qwq-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: #4ecdc4;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .qwq-link:hover {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <!-- 更新页面标题 -->
+    <h1 class="page-title">QwQ粒子特效
+        <span>绘制你的心</span>
+    </h1>
+
+    <!-- 悬浮球导航 -->
+    <div class="nav-spheres">
+        <a href="#demo" class="nav-sphere active" data-section="demo">体验</a>
+        <a href="#preview" class="nav-sphere" data-section="preview">预览</a>
+        <a href="#prompt" class="nav-sphere" data-section="prompt">提示词</a>
+    </div>
+
+    <!-- 更新提示词部分 -->
+    <section id="prompt" class="section">
+        <div class="code-container">
+            <div class="code-block">
+                <span class="comment">/* 绘制你的心 | QwQ粒子特效 */</span>
+                <span class="comment">/* 作者：QwQ */</span>
+                <span class="comment">/* 实现功能：点击任意位置生成方片可手动连成爱心，移动生成星星，添加涟漪效果 */</span>
+
+                <span class="comment">/* 样式定义 */</span>
+                .ripple {
+                    position: absolute;
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple-effect 1.2s ease-out;
+                }
+
+                .heart {
+                    position: absolute;
+                    width: 20px;
+                    height: 20px;
+                    background: linear-gradient(45deg, #ff6b6b, #ff4d4d);
+                    transform: rotate(45deg);
+                    animation: float-effect 3s linear infinite;
+                }
+
+                .star {
+                    position: absolute;
+                    width: 5px;
+                    height: 5px;
+                    background: #ffd700;
+                    border-radius: 50%;
+                    animation: twinkle 1.5s infinite;
+                }
+
+                <span class="comment">/* 动画效果 */</span>
+                @keyframes ripple-effect {
+                    100% { transform: scale(3); opacity: 0; }
+                }
+
+                @keyframes float-effect {
+                    0%, 100% { transform: translateY(0) rotate(45deg); }
+                    50% { transform: translateY(-20px) rotate(45deg); }
+                }
+
+                @keyframes twinkle {
+                    0%, 100% { opacity: 0.3; }
+                    50% { opacity: 1; }
+                }
+
+                <span class="comment">/* JavaScript 实现 */</span>
+                <span class="keyword">const</span> <span class="property">colors</span> = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ce7c', '#ce93d8'];
+
+                <span class="function">function</span> createRipple(e) {
+                    <span class="keyword">const</span> ripple = document.createElement('div');
+                    ripple.className = 'ripple';
+                    ripple.style.left = `${e.clientX}px`;
+                    ripple.style.top = `${e.clientY}px`;
+                    ripple.style.background = colors[Math.floor(Math.random()*colors.length)];
+                    document.body.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 1200);
+                }
+
+                <span class="function">function</span> createHeart(x, y) {
+                    <span class="keyword">const</span> heart = document.createElement('div');
+                    heart.className = 'heart';
+                    heart.style.left = `${x}px`;
+                    heart.style.top = `${y}px`;
+                    document.body.appendChild(heart);
+                    setTimeout(() => heart.remove(), 3000);
+                }
+
+                <span class="function">function</span> createStar(e) {
+                    <span class="keyword">const</span> star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.left = `${e.clientX}px`;
+                    star.style.top = `${e.clientY}px`;
+                    document.body.appendChild(star);
+                    setTimeout(() => star.remove(), 1500);
+                }
+            </div>
+            <a href="https://chat.qwen.ai/s/30b91918-9998-40a2-9f47-7f8e6d491f12" class="qwq-link" target="_blank">查看 QwQ 原始提示词</a>
+        </div>
+    </section>
+
+    <!-- 预览部分 -->
+    <section id="preview" class="section">
+        <div class="preview-container">
+            <video class="preview-video" controls loop>
+                <source src="https://github.com/Faybaby/imagestore/raw/main/%E7%94%BB%E5%BF%83.mp4" type="video/mp4">
+                您的浏览器不支持视频播放。
+            </video>
+        </div>
+    </section>
+
+    <!-- 更新体验部分 -->
+    <section id="demo" class="section active">
+        <div class="demo-container" id="demoArea">
+            <div class="demo-hint">点击鼠标生成方片，移动鼠标生成星星<br>可手动连接成心形</div>
+        </div>
+    </section>
+
+    <script>
+        // 导航交互
+        document.querySelectorAll('.nav-sphere').forEach(sphere => {
+            sphere.addEventListener('click', (e) => {
+                e.preventDefault();
+                // 更新导航状态
+                document.querySelectorAll('.nav-sphere').forEach(s => s.classList.remove('active'));
+                sphere.classList.add('active');
+                
+                // 更新内容显示
+                const sectionId = sphere.getAttribute('data-section');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // 特效实现
+        const demoArea = document.getElementById('demoArea');
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ce7c', '#ce93d8'];
+
+        function createRipple(e) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = `${e.clientX}px`;
+            ripple.style.top = `${e.clientY}px`;
+            ripple.style.background = colors[Math.floor(Math.random()*colors.length)];
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 1200);
+        }
+
+        function createHeart(x, y) {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 3000);
+        }
+
+        function createStar(e) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = `${e.clientX}px`;
+            star.style.top = `${e.clientY}px`;
+            document.body.appendChild(star);
+            setTimeout(() => star.remove(), 1500);
+        }
+
+        demoArea.addEventListener('click', (e) => {
+            const hint = document.querySelector('.demo-hint');
+            if (hint) hint.style.display = 'none';
+            createRipple(e);
+            createHeart(e.clientX, e.clientY);
+        });
+
+        demoArea.addEventListener('mousemove', (e) => {
+            if (Math.random() < 0.03) createStar(e);
+        });
+    </script>
+</body>
+</html> 

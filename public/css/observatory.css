@@ -1,0 +1,142 @@
+/* 重置基础样式 */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 观星台场景 */
+.observatory-scene {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #0B0B2A 0%, #1B1B4B 50%, #2D1B4B 100%);
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* 星空容器 */
+.starry-sky {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+/* 工具栏 */
+.tools-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 10;
+}
+
+/* 黑洞和引力场 */
+.black-hole {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    width: 60px;
+    height: 60px;
+    z-index: 5;
+}
+
+.gravity-field {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 100px;
+    height: 100px;
+    z-index: 4;
+}
+
+/* AI星语输入框 */
+.star-language-input {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 15px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 300px;
+}
+
+/* 星星自定义面板 */
+.star-customize-panel {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    z-index: 100;
+    min-width: 250px;
+}
+
+/* 通用隐藏类 */
+.hidden {
+    display: none !important;
+}
+
+/* 星星基础样式 */
+.star {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    z-index: 3;
+}
+
+/* 能量场效果 */
+.star-energy-field {
+    position: fixed;
+    width: 200px;
+    height: 200px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+    z-index: 6;
+}
+
+/* 心愿显示框 */
+.star-wish-box {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 12px;
+    padding: 15px 20px;
+    color: #fff;
+    font-size: 14px;
+    max-width: 200px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
+    z-index: 1000;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .tools-container {
+        bottom: 10px;
+        gap: 10px;
+    }
+    
+    .star-language-input,
+    .star-customize-panel {
+        width: 90%;
+        max-width: 300px;
+    }
+} 

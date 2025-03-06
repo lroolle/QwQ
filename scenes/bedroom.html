@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>她的卧室 - 她的宇宙</title>
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏导航 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>她的宇宙</h1>
+                <p class="subtitle">Life Scene Lab</p>
+            </div>
+            <nav class="scene-nav">
+                <div class="nav-group">
+                    <h3>生活空间</h3>
+                    <a href="bedroom.html" class="nav-item active">
+                        <i class="icon-bedroom"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的卧室</span>
+                            <span class="scene-desc">休息与梦想空间</span>
+                        </div>
+                    </a>
+                    <a href="living-room.html" class="nav-item">
+                        <i class="icon-living-room"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的客厅</span>
+                            <span class="scene-desc">社交与放松地带</span>
+                        </div>
+                    </a>
+                    <a href="kitchen.html" class="nav-item">
+                        <i class="icon-kitchen"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的厨房</span>
+                            <span class="scene-desc">美食与营养空间</span>
+                        </div>
+                    </a>
+                    <a href="balcony.html" class="nav-item">
+                        <i class="icon-balcony"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的阳台</span>
+                            <span class="scene-desc">植物与生活情调</span>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="nav-group">
+                    <h3>心灵空间</h3>
+                    <a href="tea-room.html" class="nav-item">
+                        <i class="icon-tea-room"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的茶话室</span>
+                            <span class="scene-desc">温暖的倾诉空间</span>
+                        </div>
+                    </a>
+                    <a href="emotion-station.html" class="nav-item">
+                        <i class="icon-emotion"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的情绪回收站</span>
+                            <span class="scene-desc">情绪疗愈中心</span>
+                        </div>
+                    </a>
+                    <a href="study.html" class="nav-item">
+                        <i class="icon-study"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的书房</span>
+                            <span class="scene-desc">知识与创造空间</span>
+                        </div>
+                    </a>
+                    <a href="observatory.html" class="nav-item">
+                        <i class="icon-observatory"></i>
+                        <div class="nav-content">
+                            <span class="nav-title">她的观星台</span>
+                            <span class="scene-desc">梦想与远方</span>
+                        </div>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="top-bar">
+                <button class="menu-toggle">
+                    <span>菜单</span>
+                </button>
+                <div class="search-bar">
+                    <input type="text" placeholder="探索她的宇宙...">
+                </div>
+                <div class="user-controls">
+                    <button class="theme-toggle">切换主题</button>
+                    <div class="user-profile">
+                        <img src="../public/images/avatar.jpg" alt="用户头像">
+                        <span>访客</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area scene-bedroom">
+                <section class="scene-header">
+                    <h1>她的卧室</h1>
+                    <p class="scene-description">这是一个充满梦想与安宁的私密空间，在这里你可以放松身心，享受属于自己的时光。</p>
+                </section>
+
+                <section class="scene-features">
+                    <div class="feature-card">
+                        <h3>今日心情</h3>
+                        <div class="mood-tracker">
+                            <div class="mood-option">😴 想要休息</div>
+                            <div class="mood-option">💭 沉浸思考</div>
+                            <div class="mood-option">🌙 享受宁静</div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3>氛围音乐</h3>
+                        <div class="music-player">
+                            <div class="music-info">
+                                <span>轻柔钢琴曲</span>
+                                <div class="music-controls">
+                                    <button>播放</button>
+                                    <button>暂停</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="scene-interaction">
+                    <h2>今日私密日记</h2>
+                    <div class="diary-entry">
+                        <textarea placeholder="写下今天的心情..."></textarea>
+                        <button class="btn-save">保存日记</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 移动端菜单切换
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // 点击主内容区域时关闭侧边栏
+        document.querySelector('.main-content').addEventListener('click', () => {
+            if (sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // 主题切换增强版
+        const themeToggle = document.querySelector('.theme-toggle');
+        
+        // 检查本地存储中的主题偏好
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-theme');
+            themeToggle.textContent = '切换暗色';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            
+            // 保存主题偏好
+            if (document.body.classList.contains('light-theme')) {
+                localStorage.setItem('theme', 'light');
+                themeToggle.textContent = '切换暗色';
+            } else {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.textContent = '切换亮色';
+            }
+        });
+    </script>
+</body>
+</html> 

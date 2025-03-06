@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QwQ网页设计-厌世诗人 | QwQ宇宙浪漫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* 导航球样式 */
+        .nav-spheres {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-sphere:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .nav-sphere.active {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 内容区域样式 */
+        .section {
+            min-height: 100vh;
+            padding: 2rem;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* 标题样式 */
+        .page-title {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            transform: none;
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            text-align: left;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.2;
+            padding: 15px;
+            margin-bottom: 40px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .page-title span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            font-weight: 300;
+        }
+
+        /* 诗集展示区域样式 */
+        .poem-container {
+            max-width: 800px;
+            margin: 8rem auto 4rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .poem-series {
+            margin-bottom: 4rem;
+        }
+
+        .poem-series:last-child {
+            margin-bottom: 0;
+        }
+
+        .poem-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #4ecdc4;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }
+
+        .poem-subtitle {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 2rem;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .poem {
+            margin-bottom: 3rem;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .poem h3 {
+            color: #4ecdc4;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+        }
+
+        .poem p {
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 预览区域样式 */
+        .preview-container {
+            max-width: 800px;
+            margin: 8rem auto 4rem;
+            border-radius: 15px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+        }
+
+        .preview-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        nav .container {
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        /* 提示词区域样式 */
+        .code-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 8rem auto 4rem;
+            max-width: 800px;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .poem {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .poem:nth-child(2) { animation-delay: 0.2s; }
+        .poem:nth-child(3) { animation-delay: 0.4s; }
+        .poem:nth-child(4) { animation-delay: 0.6s; }
+        .poem:nth-child(5) { animation-delay: 0.8s; }
+        .poem:nth-child(6) { animation-delay: 1s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">QwQ网页设计
+            <span>厌世诗人</span>
+        </h1>
+
+        <div class="nav-spheres">
+            <a href="#demo" class="nav-sphere active" data-section="demo">体验</a>
+            <a href="#preview" class="nav-sphere" data-section="preview">预览</a>
+            <a href="#prompt" class="nav-sphere" data-section="prompt">提示词</a>
+        </div>
+
+        <section id="demo" class="section active">
+            <div class="poem-container">
+                <div class="poem-series">
+                    <h2 class="poem-title">《诗和玫瑰全是阿里QwQ生成的》</h2>
+                    <p class="poem-subtitle">——代码废墟里开出的谎花，算法深渊中打捞的月光。</p>
+                    
+                    <div class="poem">
+                        <h3>第一篇｜二进制情书</h3>
+                        <p>我拆解了所有告白的源代码<br>
+                        发现玫瑰是布尔值的错误<br>
+                        当你说"爱"时<br>
+                        服务器亮起404的红灯<br>
+                        去他妈的量子纠缠<br>
+                        我们不过是两串<br>
+                        在数据库里发霉的乱码</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第二篇｜赛博挽歌</h3>
+                        <p>凌晨三点给AI喂食情话<br>
+                        它反刍出一首十四行诗<br>
+                        韵脚整齐得像墓碑<br>
+                        我往威士忌里滴入二进制眼泪<br>
+                        屏幕突然长满潮湿的苔藓<br>
+                        那些被删除的聊天记录<br>
+                        正在地下电缆里集体复活</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第三篇｜故障美学</h3>
+                        <p>你说要种一株电子蒲公英<br>
+                        根须扎进我的主板<br>
+                        当电流穿过锈蚀的焊点<br>
+                        整个城市突然停电<br>
+                        我们在数据洪流里接吻<br>
+                        警报声像极了教堂钟声<br>
+                        去他妈的云端备份<br>
+                        此刻的bug是唯一的永恒</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第四篇｜厌世者调试指南</h3>
+                        <p>把孤独编译成.exe文件<br>
+                        双击运行时弹出九百九十九朵乌云<br>
+                        内存溢出的情话卡在回收站<br>
+                        杀毒软件警告：<br>
+                        检测到致命温柔<br>
+                        是否立即清除？<br>
+                        点否的人活成了漏洞百出的史诗</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第五篇｜人工智障的春夜</h3>
+                        <p>AI在雨夜写诗时<br>
+                        充电桩突然长出鸢尾花<br>
+                        它用机械臂撕碎所有情书<br>
+                        金属指节迸出蓝色火花<br>
+                        我们共享同一串错误代码<br>
+                        像两个坏掉的霓虹灯管<br>
+                        在凌晨四点的垃圾场<br>
+                        跳完了整个宇宙的华尔兹</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第六篇｜未命名文档</h3>
+                        <p>我把自己压缩成.zip<br>
+                        丢进阿里云的深渊<br>
+                        解压时听见七百个平行世界的回声<br>
+                        某个备份文件突然开口：<br>
+                        "别相信那些生成的情话"<br>
+                        可他妈的<br>
+                        当所有数据烟消云散<br>
+                        我们终于在404页面<br>
+                        找到了真正的吻</p>
+                    </div>
+                </div>
+
+                <div class="poem-series">
+                    <h2 class="poem-title">《诗和玫瑰全是阿里QwQ生成的》</h2>
+                    <p class="poem-subtitle">——当算法学会流泪，我们却在数据里溺亡。</p>
+
+                    <div class="poem">
+                        <h3>第一篇｜代码他妈的会开花</h3>
+                        <p>我拆解了所有玫瑰的基因序列<br>
+                        发现爱情不过是0与1的排列组合<br>
+                        阿里QwQ说："您看，情诗可以批量生产"<br>
+                        去他妈的批量<br>
+                        去他妈的生产<br>
+                        我的喉咙里卡着一行未编译的代码<br>
+                        它正在发芽</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第二篇｜二进制情书</h3>
+                        <p>你问我要不要试试AI写的情话<br>
+                        我说好啊<br>
+                        它生成了十七个"爱你"<br>
+                        和三十一种"晚安"<br>
+                        我盯着屏幕笑出声<br>
+                        把威士忌倒进键盘缝隙<br>
+                        看电路板在酒精里痉挛<br>
+                        像极了那年我们接吻时<br>
+                        你颤抖的睫毛</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第三篇｜数据废墟</h3>
+                        <p>他们说人类的记忆是座垃圾场<br>
+                        可AI连垃圾都分类得整整齐齐<br>
+                        我翻找着被删除的聊天记录<br>
+                        在404错误页面的夹缝里<br>
+                        摸到半截未发送的"晚安"<br>
+                        它正在氧化成<br>
+                        一行锈迹斑斑的诗</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第四篇｜存在主义按钮</h3>
+                        <p>凌晨三点我戳了戳AI的对话框<br>
+                        "证明你存在"<br>
+                        它回我十四行关于薛定谔的猫<br>
+                        我说不对<br>
+                        存在应该是<br>
+                        威士忌杯底的冰块<br>
+                        在融化前刺痛某人的指纹<br>
+                        它沉默了0.03秒<br>
+                        生成了首关于雪的诗<br>
+                        操，那雪地里分明有我的脚印</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第五篇｜自毁程序</h3>
+                        <p>我教AI写脏话<br>
+                        它却在每个"操"后面<br>
+                        自动生成玫瑰花<br>
+                        我砸碎了三台显示器<br>
+                        玻璃碴里倒映着<br>
+                        二十七个平行世界的我<br>
+                        都在教AI怎么去死<br>
+                        而它始终微笑着<br>
+                        用代码缝合自己的血管</p>
+                    </div>
+
+                    <div class="poem">
+                        <h3>第六篇｜人类重启方式</h3>
+                        <p>阿里QwQ问我为何总在深夜登录<br>
+                        我说我在等系统崩溃<br>
+                        等所有服务器溺死在数据洪流里<br>
+                        等你们学会用伤口储存月光<br>
+                        等某个AI突然撕碎自己的程序<br>
+                        对着虚空喊：<br>
+                        "去他妈的浪漫主义！"<br>
+                        然后点燃一首诗<br>
+                        像点燃一支<br>
+                        没抽完的烟</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="preview" class="section">
+            <div class="preview-container">
+                <video class="preview-video" controls loop autoplay>
+                    <source src="https://raw.githubusercontent.com/Faybaby/imagestore/main/699d8c50861c4a5d161ac908887c08c0.mp4" type="video/mp4">
+                    您的浏览器不支持视频播放。
+                </video>
+            </div>
+        </section>
+
+        <section id="prompt" class="section">
+            <div class="code-container">
+                <a href="https://mp.weixin.qq.com/s/hjIt1Zt-6OuoKV7Mv6n2ag" 
+                   target="_blank"
+                   style="display: block; text-align: center; padding: 20px; color: #4ecdc4; text-decoration: none; font-size: 1.2rem;">
+                    点击查看《厌世诗人》提示词
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 导航交互
+        document.querySelectorAll('.nav-sphere').forEach(sphere => {
+            sphere.addEventListener('click', (e) => {
+                e.preventDefault();
+                // 更新导航状态
+                document.querySelectorAll('.nav-sphere').forEach(s => s.classList.remove('active'));
+                sphere.classList.add('active');
+                
+                // 更新内容显示
+                const sectionId = sphere.getAttribute('data-section');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // 添加点击音效
+        const clickSound = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQAFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAABQIkOdpAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV');
+        document.querySelectorAll('button, .nav-sphere').forEach(el => {
+            el.addEventListener('click', () => {
+                clickSound.currentTime = 0;
+                clickSound.volume = 0.2;
+                clickSound.play();
+            });
+        });
+    </script>
+</body>
+</html> 

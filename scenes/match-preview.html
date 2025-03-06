@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QwQ网页设计-对对碰预览 | QwQ宇宙浪漫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .page-title {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            text-align: left;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.2;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .page-title span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            font-weight: 300;
+        }
+
+        .nav-spheres {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-sphere:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .preview-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 8rem auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .preview-link {
+            color: #4ecdc4;
+            text-decoration: none;
+            font-size: 1.2rem;
+            display: inline-block;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+
+        .preview-link:hover {
+            transform: translateY(-3px);
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1 class="page-title">QwQ网页设计
+        <span>对对碰预览</span>
+    </h1>
+
+    <div class="nav-spheres">
+        <a href="match.html" class="nav-sphere">体验</a>
+        <a href="match-preview.html" class="nav-sphere">预览</a>
+        <a href="match-prompt.html" class="nav-sphere">提示词</a>
+    </div>
+
+    <div class="preview-container">
+        <video 
+            src="https://raw.githubusercontent.com/Faybaby/imagestore/main/1b11df1bab145e61aa03019efc89f8f6.mp4"
+            width="100%" 
+            height="600px"
+            controls
+            autoplay
+            loop
+            muted>
+            您的浏览器不支持视频播放。
+        </video>
+    </div>
+</body>
+</html> 

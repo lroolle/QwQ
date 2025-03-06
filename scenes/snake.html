@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QwQ网页设计-贪吃蛇 | QwQ宇宙浪漫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* 导航球样式 */
+        .nav-spheres {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-sphere:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .nav-sphere.active {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 内容区域样式 */
+        .section {
+            min-height: 100vh;
+            padding: 4rem 2rem 2rem;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* 标题样式 */
+        .page-title {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            transform: none;
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            text-align: left;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.2;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .page-title span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            font-weight: 300;
+        }
+
+        /* 游戏区域样式 */
+        #game { 
+            position: relative;
+            width: 80vh;
+            height: 80vh;
+            background: rgba(0, 0, 0, 0.3);
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 2rem;
+        }
+
+        .pixel { 
+            position: absolute; 
+            font-size: 20px; 
+            user-select: none; 
+        }
+        .snake-body { 
+            color: lime; 
+        }
+        #apple { 
+            color: red; 
+            cursor: pointer; 
+        }
+        #timer { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            color: white; 
+            font-size: 2em; 
+        }
+        .emoji { 
+            font-size: 1.5em; 
+        }
+
+        /* 预览区域样式 */
+        .preview-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            border-radius: 15px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+        }
+
+        .preview-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        nav .container {
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        /* 提示词区域样式 */
+        .code-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 4rem auto;
+            max-width: 800px;
+            height: calc(100vh - 8rem);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">QwQ网页设计-贪吃蛇</div>
+            <div class="nav-links">
+                <a href="#">网页设计</a>
+                <a href="#">交互体验</a>
+                <a href="#">视觉美学</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">QwQ网页设计
+            <span>贪吃蛇</span>
+        </h1>
+
+        <div class="nav-spheres">
+            <a href="#demo" class="nav-sphere active" data-section="demo">体验</a>
+            <a href="#preview" class="nav-sphere" data-section="preview">预览</a>
+            <a href="#prompt" class="nav-sphere" data-section="prompt">提示词</a>
+        </div>
+
+        <section id="demo" class="section active">
+            <div class="game-container">
+                <div id="game">
+                    <div id="snake-container"></div>
+                    <div id="apple" class="pixel emoji">🍎</div>
+                    <div id="timer">15</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="preview" class="section">
+            <div class="preview-container">
+                <video class="preview-video" controls loop autoplay>
+                    <source src="https://raw.githubusercontent.com/Faybaby/imagestore/main/a42c403c4c8eee26a5ac025183474fd6.mp4" type="video/mp4">
+                    您的浏览器不支持视频播放。
+                </video>
+            </div>
+        </section>
+
+        <section id="prompt" class="section">
+            <div class="code-container">
+                <iframe 
+                    src="https://chat.qwen.ai/s/1c2ba91b-ef92-4da2-af1c-9e8ccaae3031" 
+                    style="width: 100%; height: 100%; border: none;"
+                    title="贪吃蛇提示词"
+                ></iframe>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 导航交互
+        document.querySelectorAll('.nav-sphere').forEach(sphere => {
+            sphere.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-sphere').forEach(s => s.classList.remove('active'));
+                sphere.classList.add('active');
+                
+                const sectionId = sphere.getAttribute('data-section');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // 游戏逻辑
+        const game = document.getElementById('game');
+        const snakeContainer = document.getElementById('snake-container');
+        const apple = document.getElementById('apple');
+        const timer = document.getElementById('timer');
+
+        const snakeLength = 200;
+        const snakeBody = [];
+        let snakeX = [50], snakeY = [50];
+        let appleX = 300, appleY = 300;
+        let direction = {x: 1, y: 0};
+        let baseSpeed = 0.5;
+        let acceleration = 0.005;
+        let phase = 0;
+        let gameOver = false;
+        let timeLeft = 15;
+
+        // 初始化蛇的身体
+        for (let i = 0; i < snakeLength; i++) {
+            const body = document.createElement('div');
+            body.className = 'snake-body pixel emoji';
+            body.textContent = i === 0 ? '🔥' : '🟩';
+            snakeContainer.appendChild(body);
+            snakeBody.push(body);
+            snakeX.push(50 - i * 2.5);
+            snakeY.push(50);
+        }
+
+        // 初始化位置
+        apple.style.left = appleX + 'px';
+        apple.style.top = appleY + 'px';
+
+        // 控制苹果移动
+        document.addEventListener('mousemove', (e) => {
+            if (!gameOver) {
+                appleX = e.clientX - 20;
+                appleY = e.clientY - 20;
+                apple.style.left = appleX + 'px';
+                apple.style.top = appleY + 'px';
+            }
+        });
+
+        // 蛇的AI逻辑
+        function updateSnake() {
+            if (gameOver) return;
+
+            baseSpeed += acceleration;
+            const speedMultiplier = phase === 2 ? 3 : (phase === 1 ? 1.5 : 1);
+            const currentSpeed = baseSpeed * speedMultiplier;
+
+            const dx = appleX - snakeX[0];
+            const dy = appleY - snakeY[0];
+            const angle = Math.atan2(dy, dx);
+            
+            direction.x = Math.cos(angle) * currentSpeed;
+            direction.y = Math.sin(angle) * currentSpeed;
+
+            for (let i = snakeLength-1; i > 0; i--) {
+                snakeX[i] = snakeX[i-1];
+                snakeY[i] = snakeY[i-1];
+            }
+
+            snakeX[0] += direction.x;
+            snakeY[0] += direction.y;
+
+            snakeBody.forEach((body, index) => {
+                body.style.left = snakeX[index] + 'px';
+                body.style.top = snakeY[index] + 'px';
+            });
+
+            const dxCollision = snakeX[0] - appleX;
+            const dyCollision = snakeY[0] - appleY;
+            if (Math.sqrt(dxCollision*dxCollision + dyCollision*dyCollision) < 30) {
+                loseGame();
+            }
+
+            const margin = 50;
+            if (snakeX[0] < -margin || snakeX[0] > window.innerWidth + margin || 
+                snakeY[0] < -margin || snakeY[0] > window.innerHeight + margin) {
+                direction.x *= -0.9;
+                direction.y *= -0.9;
+            }
+        }
+
+        // 游戏阶段控制
+        setInterval(() => {
+            if (gameOver) return;
+            phase = Math.floor((15 - timeLeft)/5) + 1;
+        }, 100);
+
+        // 倒计时
+        const countDown = setInterval(() => {
+            if (gameOver) return;
+            timeLeft--;
+            timer.textContent = timeLeft;
+            if (timeLeft <= 0) winGame();
+        }, 1000);
+
+        function winGame() {
+            gameOver = true;
+            clearInterval(countDown);
+            apple.textContent = '🎉';
+            apple.style.fontSize = '200px';
+            apple.style.left = (window.innerWidth/2 - 100) + 'px';
+            apple.style.top = (window.innerHeight/2 - 100) + 'px';
+            
+            snakeBody.forEach((body, index) => {
+                body.textContent = index % 2 ? '💥' : '🔥';
+                body.style.fontSize = '50px';
+                body.style.animation = 'explode 0.5s infinite';
+            });
+        }
+
+        function loseGame() {
+            gameOver = true;
+            clearInterval(countDown);
+            apple.textContent = '💀';
+            
+            snakeBody[0].textContent = '😈';
+            snakeBody.slice(1).forEach(body => body.textContent = '🟥');
+            
+            setTimeout(() => {
+                apple.style.display = 'none';
+                snakeBody.forEach(body => {
+                    body.style.fontSize = '200px';
+                    body.style.left = (window.innerWidth/2 - 100) + 'px';
+                    body.style.top = (window.innerHeight/2 - 100) + 'px';
+                });
+            }, 1000);
+        }
+
+        // 主循环
+        setInterval(updateSnake, 16);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,16 @@
+{
+  "name": "her-universe",
+  "version": "1.0.0",
+  "description": "一个基于生活场景的观察实验室",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+} 

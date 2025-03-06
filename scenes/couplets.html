@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QwQ网页设计-二手对联 | QwQ宇宙浪漫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* 导航球样式 */
+        .nav-spheres {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-sphere:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .nav-sphere.active {
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 内容区域样式 */
+        .section {
+            min-height: 100vh;
+            padding: 4rem 2rem 2rem;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* 标题样式 */
+        .page-title {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            transform: none;
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            text-align: left;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.2;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .page-title span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            font-weight: 300;
+        }
+
+        /* 体验区域样式 */
+        .demo-container {
+            max-width: 1200px;
+            margin: 4rem auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 80vh;
+        }
+
+        /* 预览区域样式 */
+        .preview-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            border-radius: 15px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+        }
+
+        .preview-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        /* 提示词区域样式 */
+        .code-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 4rem auto;
+            max-width: 800px;
+        }
+
+        /* 对联卡片样式 */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .couplet-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .couplet-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .card-bg {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, rgba(106,17,203,0.3), rgba(37,117,252,0.3));
+            animation: rotate 10s linear infinite;
+            opacity: 0.3;
+            transform: skew(-20deg);
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg) skew(-20deg); }
+            100% { transform: rotate(360deg) skew(-20deg); }
+        }
+
+        .couplet-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .couplet-text h2 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .couplet-text p {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        .couplet-text .story {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+        }
+
+        .custom-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #6a11cb;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .qwq-link {
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+            color: #2575fc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        /* 预览区域特殊样式 */
+        .preview-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        #hero {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite;
+        }
+
+        /* 代码块样式 */
+        .code-block {
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .code-block h3 {
+            color: #6a11cb;
+            margin-bottom: 10px;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        code {
+            font-family: monospace;
+            color: #e0e0ff;
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        nav .container {
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        /* 添加新的样式 */
+        .demo-section {
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            overflow-x: hidden;
+            font-family: 'Orbitron', sans-serif;
+            padding: 0;
+            margin: 0;
+        }
+
+        .demo-section #hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .demo-section #background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .demo-section .hero-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2;
+            width: 100%;
+        }
+
+        .demo-section .content {
+            position: relative;
+            padding: 4rem 0;
+            background: rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            z-index: 3;
+        }
+
+        .demo-section .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .demo-section .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            animation: twinkle 2s infinite;
+        }
+
+        .demo-section .enter-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 0 20px rgba(106, 17, 203, 0.5);
+        }
+
+        .demo-section .enter-btn:hover {
+            transform: scale(1.1) rotate(-5deg);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">QwQ网页设计-二手对联</div>
+            <div class="nav-links">
+                <a href="#">网页设计</a>
+                <a href="#">交互体验</a>
+                <a href="#">视觉美学</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">QwQ网页设计
+            <span>二手对联情报处</span>
+        </h1>
+
+        <div class="nav-spheres">
+            <a href="#demo" class="nav-sphere active" data-section="demo">体验</a>
+            <a href="#preview" class="nav-sphere" data-section="preview">预览</a>
+            <a href="#prompt" class="nav-sphere" data-section="prompt">提示词</a>
+        </div>
+
+        <section id="demo" class="section active">
+            <div class="demo-section">
+                <section id="hero">
+                    <video id="background-video" autoplay muted loop>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-slow-movement-of-galaxy-stars-1439-large.mp4" type="video/mp4">
+                    </video>
+                    <div class="hero-content">
+                        <h1 class="hero-title">二手对联情报处</h1>
+                        <p class="subtitle">进入宇宙的禁忌情感交易，挑战情感的极限</p>
+                        <button class="enter-btn">穿越黑洞</button>
+                    </div>
+                </section>
+
+                <div class="stars" id="stars"></div>
+
+                <section class="content">
+                    <div class="container">
+                        <div class="card-container">
+                            <div class="couplet-card">
+                                <div class="card-bg"></div>
+                                <div class="couplet-text">
+                                    <h2>星轨之恋</h2>
+                                    <p>上联：银河倾泻三千丈<br>下联：月影徘徊十二时</p>
+                                    <p class="story">来自仙女座星系的禁忌之恋，据说能改变星系轨道...</p>
+                                </div>
+                            </div>
+                            <div class="couplet-card">
+                                <div class="card-bg"></div>
+                                <div class="couplet-text">
+                                    <h2>量子情书</h2>
+                                    <p>上联：量子纠缠越时空<br>下联：弦动心弦跨维度</p>
+                                    <p class="story">由平行宇宙诗人创作，可触发多维空间共鸣...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="custom-section">
+                            <h2>定制你的宇宙对联</h2>
+                            <textarea class="custom-input" placeholder="描述你的外星浪漫邂逅..."></textarea>
+                            <button class="submit-btn">召唤宇宙诗人</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section id="preview" class="section">
+            <div class="preview-container" style="max-width: 1200px; margin: 4rem auto; padding: 20px; background: rgba(0, 0, 0, 0.3); border-radius: 15px; position: relative; overflow: hidden;">
+                <video class="preview-video" controls loop autoplay style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+                    <source src="https://github.com/Faybaby/imagestore/raw/main/c821e915f1df452ebc6ba95a45797cba.mp4" type="video/mp4">
+                    您的浏览器不支持视频播放。
+                </video>
+            </div>
+        </section>
+
+        <section id="prompt" class="section">
+            <div class="code-container" style="max-width: none; margin: 0; padding: 0; background: #000; height: 100vh; border-radius: 0;">
+                <iframe 
+                    src="https://chat.qwen.ai/s/59cab13b-989a-4939-94b3-a0265082182f" 
+                    style="width: 100%; height: 100%; border: none; border-radius: 0; background: #000;"
+                    title="二手对联提示词"
+                ></iframe>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 导航交互
+        document.querySelectorAll('.nav-sphere').forEach(sphere => {
+            sphere.addEventListener('click', (e) => {
+                e.preventDefault();
+                // 更新导航状态
+                document.querySelectorAll('.nav-sphere').forEach(s => s.classList.remove('active'));
+                sphere.classList.add('active');
+                
+                // 更新内容显示
+                const sectionId = sphere.getAttribute('data-section');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // 星空背景生成
+        const stars = document.getElementById('stars');
+        for(let i=0; i<100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.top = Math.random() * 100 + 'vh';
+            star.style.left = Math.random() * 100 + 'vw';
+            star.style.animationDelay = Math.random() * 2 + 's';
+            stars.appendChild(star);
+        }
+
+        // 按钮音效
+        const clickSound = new Audio('https://www.soundjay.com/button/sounds/beep-07.mp3');
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => clickSound.play());
+        });
+
+        // 视差滚动
+        window.addEventListener('scroll', () => {
+            const parallax = document.querySelectorAll('.parallax');
+            parallax.forEach(element => {
+                element.style.backgroundPositionY = window.pageYOffset * 0.3 + 'px';
+            });
+        });
+    </script>
+</body>
+</html> 

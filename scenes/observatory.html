@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观星台</title>
+    <link rel="stylesheet" href="/css/observatory.css">
+</head>
+<body>
+    <div class="observatory-scene">
+        <div class="starry-sky" id="starrySky"></div>
+        
+        <!-- 工具栏 -->
+        <div class="tools-container">
+            <button id="aiStarBtn" class="tool-btn">AI星语</button>
+            <button id="constellationBtn" class="tool-btn">星座绘制</button>
+            <button id="exploreBtn" class="tool-btn">探索宇宙</button>
+            <button id="daydreamBtn" class="tool-btn">进入冥想</button>
+            <button id="returnBtn" class="tool-btn hidden">返回现实</button>
+        </div>
+
+        <!-- 黑洞和引力场 -->
+        <div id="blackHole" class="black-hole"></div>
+        <div id="gravityField" class="gravity-field"></div>
+
+        <!-- AI星语输入 -->
+        <div id="starLanguageInput" class="star-language-input hidden">
+            <h3>创建你的星星</h3>
+            <textarea id="starMessage" placeholder="写下你想对星星说的话..."></textarea>
+            <div class="button-container">
+                <button id="createStarBtn" class="create-star-btn">
+                    <span>创建星星</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 星星自定义面板 -->
+        <div id="starCustomizePanel" class="star-customize-panel hidden">
+            <h3>定制你的星星</h3>
+            <div class="customize-form">
+                <div class="form-group">
+                    <label>星语</label>
+                    <input type="text" class="star-text" placeholder="写下你的心愿...">
+                </div>
+                <div class="form-group">
+                    <label>颜色</label>
+                    <input type="color" class="star-color" value="#ffffff">
+                </div>
+                <div class="form-group">
+                    <label>亮度</label>
+                    <input type="range" class="star-brightness" min="0.2" max="1" step="0.1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>运动方式</label>
+                    <select class="star-motion">
+                        <option value="float">漂浮</option>
+                        <option value="spiral">螺旋</option>
+                        <option value="static">静止</option>
+                        <option value="pulse">脉动</option>
+                        <option value="orbit">轨道</option>
+                    </select>
+                </div>
+                <button class="confirm-star">放入星空</button>
+            </div>
+        </div>
+
+        <!-- 心愿显示 -->
+        <div id="wishQuote" class="wish-quote hidden">
+            <p class="quote-text"></p>
+        </div>
+    </div>
+
+    <script src="/js/observatory.js"></script>
+</body>
+</html> 

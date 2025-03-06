@@ -1,227 +1,687 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Topic Static Site</title>
-    <link rel="stylesheet" href="/public/css/styles.css">
-    <!-- Simple responsive meta tag -->
-    <meta name="description" content="A multi-topic static site with auto-routing">
+    <title>QwQ Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+        }
+
+        header {
+            padding: 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .demo-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        .demo-card {
+            perspective: 1000px;
+            height: 400px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .demo-card:hover .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .demo-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .demo-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: transform 0.3s;
+        }
+
+        .demo-link:hover {
+            transform: translateY(-3px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .more-link {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: linear-gradient(45deg, #6b66ff, #4ecdc4);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: transform 0.3s;
+            font-weight: bold;
+        }
+
+        .more-link:hover {
+            transform: translateY(-3px);
+        }
+
+        @media (max-width: 768px) {
+            .demo-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+        }
+
+        /* 悬浮分类球样式 */
+        .category-sphere {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+        }
+
+        .sphere-toggle {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .sphere-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .sphere-menu {
+            position: absolute;
+            right: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .sphere-menu.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .category-item {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .category-item:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .category-text {
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        /* 添加动画关键帧 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .category-item {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .category-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .category-item:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .category-item:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav id="main-nav">
-            <div class="container">
-                <h1 class="site-title">Topic Explorer</h1>
-                <div id="nav-links">
-                    <!-- Navigation will be dynamically populated -->
-                    <a href="/" class="active">Home</a>
-                </div>
-            </div>
-        </nav>
+        <div class="logo">QwQ Demo</div>
+        <div class="subtitle">探索创意的无限可能</div>
     </header>
 
-    <main id="content" class="container">
-        <!-- Content will be loaded here -->
-        <div id="home-content">
-            <h2>Welcome to the Topic Explorer</h2>
-            <p>Select a topic from the navigation or explore the available pages below:</p>
-            
-            <div id="page-list" class="grid">
-                <!-- Page listing will be populated automatically -->
-                <div class="loading">Loading available topics...</div>
+    <div class="demo-container">
+        <!-- 对对碰 -->
+        <div class="demo-card" data-categories="programming,design">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🌸</div>
+                    <h2 class="demo-title">对对碰</h2>
+                    <p class="demo-description">一个充满趣味的花朵配对游戏</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        通过拖拽相同的花朵进行匹配，
+                        在限定时间内完成配对获得胜利。
+                        体验趣味性与挑战性的完美结合。
+                    </p>
+                    <a href="scenes/match.html" class="demo-link">查看演示</a>
+                </div>
             </div>
         </div>
-    </main>
+
+        <!-- 粒子特效 -->
+        <div class="demo-card" data-categories="programming,design">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">✨</div>
+                    <h2 class="demo-title">粒子特效</h2>
+                    <p class="demo-description">梦幻的视觉特效</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        基于Canvas的粒子系统，
+                        实现粒子跟随、烟花绽放等
+                        多种互动效果。
+                    </p>
+                    <a href="scenes/particles.html" class="demo-link">查看演示</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 贪吃蛇游戏 -->
+        <div class="demo-card" data-categories="programming">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🐍</div>
+                    <h2 class="demo-title">QwQ贪吃蛇</h2>
+                    <p class="demo-description">15秒生死时速</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        在这场15秒的生死追逐中，
+                        你能否躲过AI蛇的追捕？
+                        移动鼠标，活到最后！
+                    </p>
+                    <a href="scenes/snake.html" class="demo-link">开始游戏</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 厌世诗人 -->
+        <div class="demo-card" data-categories="literature">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">📖</div>
+                    <h2 class="demo-title">厌世诗人</h2>
+                    <p class="demo-description">探索诗意的虚无</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        在这里，每一句诗都是对生命的深刻思考。
+                        让文字诉说内心最真实的感受。
+                    </p>
+                    <a href="scenes/poet.html" class="demo-link">查看演示</a>
+                </div>
+            </div>
+        </div>
+        <!-- 1. 二手对联 -->
+        <div class="demo-card" data-categories="literature">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">📜</div>
+                    <h2 class="demo-title">二手对联</h2>
+                    <p class="demo-description">宇宙浪漫交易所</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        在这个宇宙浪漫的交易所中，我们将诗词与科技完美融合。
+                        每一副对联都蕴含着跨越时空的浪漫密码，由星际诗人创作。
+                    </p>
+                    <a href="scenes/couplets.html" class="demo-link">查看演示</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 星空许愿 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🌟</div>
+                    <h2 class="demo-title">星空许愿</h2>
+                    <p class="demo-description">创建属于你的星星，许下你的愿望</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        在浩瀚的星空中创建独特的星星，每颗星星都承载着你的心愿。
+                        通过自定义星星的颜色、亮度和运动轨迹，让你的愿望更加独特。
+                    </p>
+                    <a href="scenes/observatory.html" class="demo-link">探索星空</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 创意画板 -->
+        <div class="demo-card" data-categories="more,design">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🎨</div>
+                    <h2 class="demo-title">创意画板</h2>
+                    <p class="demo-description">释放你的艺术天赋</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        一个充满创意的数字画板，支持多种绘画工具和特效。
+                        让你的想象力在这里自由翱翔。
+                    </p>
+                    <a href="#" class="demo-link">开始创作</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 音乐可视化 -->
+        <div class="demo-card" data-categories="more,programming">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🎵</div>
+                    <h2 class="demo-title">音乐可视化</h2>
+                    <p class="demo-description">聆听音乐的视觉盛宴</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        将音乐转化为动态视觉效果，
+                        感受声音与画面的完美融合。
+                    </p>
+                    <a href="#" class="demo-link">体验音乐</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 3D 展示 -->
+        <div class="demo-card" data-categories="more,programming">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🎮</div>
+                    <h2 class="demo-title">3D 展示</h2>
+                    <p class="demo-description">沉浸式3D交互体验</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        探索3D世界的无限可能，
+                        体验真实的空间交互。
+                    </p>
+                    <a href="#" class="demo-link">开始探索</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. 时光相册 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">📸</div>
+                    <h2 class="demo-title">时光相册</h2>
+                    <p class="demo-description">记录美好回忆</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        创建独特的数字相册，
+                        珍藏每一个精彩瞬间。
+                    </p>
+                    <a href="#" class="demo-link">开始记录</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. 诗词生成 -->
+        <div class="demo-card" data-categories="more,literature">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">📝</div>
+                    <h2 class="demo-title">诗词生成</h2>
+                    <p class="demo-description">AI 辅助创作诗词</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        借助 AI 技术，创作优美诗词，
+                        让文字焕发新的生命力。
+                    </p>
+                    <a href="#" class="demo-link">开始创作</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. 情绪日记 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">📔</div>
+                    <h2 class="demo-title">情绪日记</h2>
+                    <p class="demo-description">记录每日心情变化</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        通过可视化方式记录情绪变化，
+                        了解自己的心理健康状态。
+                    </p>
+                    <a href="#" class="demo-link">开始记录</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. 梦境捕手 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🌙</div>
+                    <h2 class="demo-title">梦境捕手</h2>
+                    <p class="demo-description">捕捉梦境的碎片</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        记录和分析你的梦境，
+                        探索潜意识的奥秘。
+                    </p>
+                    <a href="#" class="demo-link">开始记录</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. 时间胶囊 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">⏳</div>
+                    <h2 class="demo-title">时间胶囊</h2>
+                    <p class="demo-description">留给未来的信息</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        创建数字时间胶囊，
+                        给未来的自己留下独特的记忆。
+                    </p>
+                    <a href="#" class="demo-link">创建胶囊</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. 光影画廊 -->
+        <div class="demo-card" data-categories="more,design">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🖼️</div>
+                    <h2 class="demo-title">光影画廊</h2>
+                    <p class="demo-description">光与影的艺术</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        探索光影变换的艺术效果，
+                        创造独特的视觉体验。
+                    </p>
+                    <a href="#" class="demo-link">开始创作</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. 心情调色板 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🎨</div>
+                    <h2 class="demo-title">心情调色板</h2>
+                    <p class="demo-description">用颜色表达心情</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        通过颜色混合表达情绪，
+                        创造专属的心情色彩。
+                    </p>
+                    <a href="#" class="demo-link">开始调色</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. 纸飞机 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">✈️</div>
+                    <h2 class="demo-title">纸飞机</h2>
+                    <p class="demo-description">传递你的心意</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        折一架数字纸飞机，
+                        让心意飞向远方。
+                    </p>
+                    <a href="#" class="demo-link">开始折纸</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 14. 植物生长 -->
+        <div class="demo-card" data-categories="more">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="demo-icon">🌱</div>
+                    <h2 class="demo-title">植物生长</h2>
+                    <p class="demo-description">数字植物养成</p>
+                </div>
+                <div class="card-back">
+                    <p class="demo-description">
+                        培育你的数字植物，
+                        见证它的成长过程。
+                    </p>
+                    <a href="#" class="demo-link">开始种植</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加悬浮分类球 -->
+    <div class="category-sphere">
+        <div class="sphere-toggle">
+            <span style="font-size: 1.5rem">🔍</span>
+        </div>
+        <div class="sphere-menu">
+            <a href="#programming" class="category-item" data-category="programming">
+                <span class="category-icon">💻</span>
+                <span class="category-text">编程能力</span>
+            </a>
+            <a href="#literature" class="category-item" data-category="literature">
+                <span class="category-icon">📚</span>
+                <span class="category-text">文学能力</span>
+            </a>
+            <a href="#design" class="category-item" data-category="design">
+                <span class="category-icon">🎨</span>
+                <span class="category-text">网页设计</span>
+            </a>
+            <a href="#more" class="category-item" data-category="more">
+                <span class="category-icon">✨</span>
+                <span class="category-text">更多创造</span>
+            </a>
+        </div>
+    </div>
 
     <footer>
-        <div class="container">
-            <p>&copy; 2023 Topic Explorer. Hosted on Cloudflare Pages.</p>
-        </div>
+        <a href="universe.html" class="more-link">探索更多 →</a>
     </footer>
 
     <script>
-        // Auto-routing and navigation system
-        (async function() {
-            const pageList = document.getElementById('page-list');
-            const navLinks = document.getElementById('nav-links');
-            const contentArea = document.getElementById('content');
-            
-            // Fetch and display available pages
-            async function loadAvailablePages() {
-                try {
-                    // This would typically come from an API or static manifest
-                    // In this simple version, we'll hardcode some examples
-                    // and allow for discovery of future pages
-                    const pages = await discoverPages();
-                    
-                    if (pages.length === 0) {
-                        pageList.innerHTML = '<p>No topics available yet.</p>';
-                        return;
-                    }
+        // 添加卡片翻转音效
+        document.querySelectorAll('.card-inner').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQAFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAABQIkOdpAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV');
+                audio.volume = 0.2;
+                audio.play();
+            });
+        });
 
-                    // Clear loading message
-                    pageList.innerHTML = '';
-                    
-                    // Generate nav and page cards
-                    pages.forEach(page => {
-                        // Create navigation link
-                        if (page.path !== '/') {
-                            const navLink = document.createElement('a');
-                            navLink.href = page.path;
-                            navLink.textContent = page.title;
-                            navLinks.appendChild(navLink);
-                        }
+        // 更新分类球交互逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            const sphereToggle = document.querySelector('.sphere-toggle');
+            const sphereMenu = document.querySelector('.sphere-menu');
+            const categoryItems = document.querySelectorAll('.category-item');
+            const demoCards = document.querySelectorAll('.demo-card');
 
-                        // Create page card
-                        if (page.path !== '/') {
-                            const card = document.createElement('div');
-                            card.className = 'card';
-                            card.innerHTML = `
-                                <h3>${page.title}</h3>
-                                <p>${page.description}</p>
-                                <a href="${page.path}" class="btn">Explore</a>
-                            `;
-                            pageList.appendChild(card);
-                        }
-                    });
+            // 切换分类菜单显示
+            sphereToggle.addEventListener('click', () => {
+                sphereMenu.classList.toggle('active');
+                playToggleSound();
+            });
 
-                    // Setup routing
-                    setupRouting();
-                } catch (error) {
-                    console.error('Error loading pages:', error);
-                    pageList.innerHTML = '<p>Error loading topics. Please try again later.</p>';
-                }
+            // 添加分类点击效果
+            categoryItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const category = item.getAttribute('data-category');
+                    filterDemos(category);
+                    playCategorySound();
+                });
+            });
+
+            // 播放切换音效
+            function playToggleSound() {
+                const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQAFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAABQIkOdpAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV');
+                audio.volume = 0.2;
+                audio.play();
             }
 
-            // Function to discover available pages
-            async function discoverPages() {
-                // For a real implementation, this would be dynamic
-                // For this demo, we'll return some sample pages
-                // and you can add more pages to the "pages" directory later
-                
-                // You could implement dynamic discovery by:
-                // 1. Using a fetch to a JSON manifest file
-                // 2. Server-side directory listing (requires server config)
-                // 3. Hard-coding known pages and paths
-                
-                // Start with home page
-                const pages = [
-                    {
-                        path: '/',
-                        title: 'Home',
-                        description: 'Main page'
-                    }
-                ];
-                
-                // Add sample topics (to be replaced with your actual content)
-                const sampleTopics = [
-                    {
-                        path: '/pages/topic1.html',
-                        title: 'Topic 1',
-                        description: 'Information about the first topic'
-                    },
-                    {
-                        path: '/pages/topic2.html',
-                        title: 'Topic 2',
-                        description: 'Information about the second topic'
-                    }
-                ];
-                
-                // Check if the sample topics actually exist
-                // and add any other pages found in the pages directory
-                // (This is a simplified version - in production, you'd use a server-side solution or manifest)
-                
-                return [...pages, ...sampleTopics];
+            // 播放分类选择音效
+            function playCategorySound() {
+                const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQAFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAABQIkOdpAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV');
+                audio.volume = 0.15;
+                audio.play();
             }
 
-            // Setup client-side routing for single-page feeling
-            function setupRouting() {
-                // Handle navigation without page reloads
-                document.addEventListener('click', function(e) {
-                    // Only handle clicks on internal links
-                    const link = e.target.closest('a');
-                    if (link && link.href.startsWith(window.location.origin) && 
-                        !link.getAttribute('target') && !e.ctrlKey && !e.metaKey) {
-                        e.preventDefault();
-                        navigateTo(link.href);
+            // 更新过滤演示卡片逻辑
+            function filterDemos(category) {
+                demoCards.forEach(card => {
+                    const categories = card.getAttribute('data-categories').split(',');
+                    if (categories.includes(category)) {
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                        card.style.transition = 'all 0.3s';
+                    } else {
+                        card.style.opacity = '0.3';
+                        card.style.transform = 'scale(0.95)';
+                        card.style.transition = 'all 0.3s';
                     }
                 });
-
-                // Handle browser back/forward buttons
-                window.addEventListener('popstate', () => {
-                    loadContent(window.location.pathname);
-                });
-
-                // Initial content load
-                loadContent(window.location.pathname);
             }
 
-            // Navigate to a new URL without page reload
-            function navigateTo(url) {
-                const path = new URL(url).pathname;
-                history.pushState({}, '', url);
-                loadContent(path);
-            }
-
-            // Load content based on current path
-            async function loadContent(path) {
-                // Update active navigation
-                const navLinks = document.querySelectorAll('#nav-links a');
-                navLinks.forEach(link => {
-                    link.classList.toggle('active', link.getAttribute('href') === path);
-                });
-
-                // Show/hide home content
-                const homeContent = document.getElementById('home-content');
-                
-                if (path === '/' || path === '/index.html') {
-                    homeContent.style.display = 'block';
-                    return;
+            // 点击外部关闭菜单
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.category-sphere')) {
+                    sphereMenu.classList.remove('active');
                 }
-                
-                // Hide home content
-                homeContent.style.display = 'none';
-                
-                // Show loading indicator
-                contentArea.innerHTML = '<div class="loading">Loading content...</div>';
-                
-                try {
-                    // Fetch and display page content
-                    const response = await fetch(path);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error ${response.status}`);
-                    }
-                    
-                    const html = await response.text();
-                    
-                    // Extract just the content section
-                    // This assumes your content pages follow a specific format
-                    // You may need to adjust this based on your page structure
-                    const tempElement = document.createElement('div');
-                    tempElement.innerHTML = html;
-                    
-                    // Try to find main content section, or use the entire body
-                    const pageContent = tempElement.querySelector('main') || 
-                                       tempElement.querySelector('body') || 
-                                       tempElement;
-                    
-                    contentArea.innerHTML = pageContent.innerHTML;
-                } catch (error) {
-                    console.error('Error loading content:', error);
-                    contentArea.innerHTML = `
-                        <div class="error">
-                            <h2>Error Loading Content</h2>
-                            <p>The requested page could not be loaded. It may not exist yet.</p>
-                            <a href="/" class="btn">Return Home</a>
-                        </div>
-                    `;
-                }
-            }
-
-            // Initialize
-            loadAvailablePages();
-        })();
+            });
+        });
     </script>
 </body>
 </html> 
