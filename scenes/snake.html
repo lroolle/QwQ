@@ -302,13 +302,20 @@
         apple.style.top = appleY + 'px';
 
         // 控制苹果移动
-        document.addEventListener('mousemove', (e) => {
-            if (!gameOver) {
-                appleX = e.clientX - 20;
-                appleY = e.clientY - 20;
-                apple.style.left = appleX + 'px';
-                apple.style.top = appleY + 'px';
-            }
+        function getMousePos(evt) {
+            const rect = game.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+
+        game.addEventListener('mousemove', function(evt) {
+            const mousePos = getMousePos(evt);
+            appleX = mousePos.x;
+            appleY = mousePos.y;
+            apple.style.left = appleX + 'px';
+            apple.style.top = appleY + 'px';
         });
 
         // 蛇的AI逻辑

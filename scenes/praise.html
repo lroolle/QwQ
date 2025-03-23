@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> 夸夸我  </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(180deg, #0E0C2A 0%, #000033 100%);
+            color: #C9F65E;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.5s ease;
+        }
+
+        body.female {
+            background: linear-gradient(180deg, #2A0C1E 0%, #330033 100%);
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+        }
+
+        .page-title {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: #00E0FF;
+            z-index: 1000;
+            text-align: left;
+            letter-spacing: 1px;
+            line-height: 1.2;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .page-title span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            font-weight: 300;
+        }
+
+        .gender-selector {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -120px);
+            display: flex;
+            gap: 2rem;
+        }
+
+        .gender-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .gender-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .gender-btn.active.male {
+            background: #3B82F6;
+            color: white;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .gender-btn.active.female {
+            background: #EC4899;
+            color: white;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+        }
+
+        .praise-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: 1.2rem 3rem;
+            border: none;
+            border-radius: 12px;
+            background: #3B82F6;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: 200px;
+        }
+
+        .praise-btn:hover {
+            transform: translate(-50%, 0) scale(1.05);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .praise-btn.female {
+            background: #EC4899;
+        }
+
+        .praise-btn.female:hover {
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+        }
+
+        .praise-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, 100px);
+            text-align: center;
+            min-height: 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            opacity: 0;
+            transition: all 0.8s ease;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .text-container {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .praise-text.show {
+            opacity: 1;
+        }
+
+        .praise-text .cn {
+            font-size: 2rem;
+            color: #C9F65E;
+            text-shadow: 0 0 10px rgba(201, 246, 94, 0.3);
+            font-family: "Ma Shan Zheng", cursive;
+        }
+
+        .praise-text .en {
+            font-size: 1.2rem;
+            color: #00E0FF;
+            font-family: "Dancing Script", cursive;
+        }
+
+        .praise-text .why {
+            font-size: 1rem;
+            color: #9CA3AF;
+            opacity: 0;
+            height: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            font-family: "Ma Shan Zheng", cursive;
+        }
+
+        .praise-text .why.show {
+            opacity: 1;
+            height: auto;
+            margin-top: 1rem;
+        }
+
+        .why-toggle {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: none;
+            border: none;
+            color: #9CA3AF;
+            cursor: pointer;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .why-toggle:hover {
+            color: #C9F65E;
+        }
+
+        .why-toggle.show {
+            opacity: 1;
+        }
+
+        @keyframes writing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        .letter-by-letter {
+            display: inline-block;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            width: 100%;
+            border-right: 2px solid;
+            animation: writing 2s steps(40, end), blink 0.75s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { border-color: transparent }
+            50% { border-color: currentColor; }
+        }
+
+        .nav-spheres {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-sphere:hover {
+            transform: scale(1.1);
+        }
+
+        .nav-sphere.active {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .upload-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(14, 12, 42, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(201, 246, 94, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            color: #C9F65E;
+        }
+
+        .upload-panel.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .upload-panel input {
+            display: block;
+            width: 300px;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            border: 1px solid rgba(201, 246, 94, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #C9F65E;
+        }
+
+        .upload-panel input::placeholder {
+            color: rgba(201, 246, 94, 0.5);
+        }
+
+        .upload-panel button {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(201, 246, 94, 0.2);
+            color: #C9F65E;
+            border: 1px solid rgba(201, 246, 94, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-panel button:hover {
+            background: rgba(201, 246, 94, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.2rem;
+                top: 20px;
+                left: 20px;
+                padding: 10px;
+            }
+
+            .praise-text .cn {
+                font-size: 1.6rem;
+            }
+
+            .praise-text .en {
+                font-size: 1rem;
+            }
+
+            .upload-panel {
+                width: 90%;
+            }
+
+            .upload-panel input {
+                width: 100%;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Dancing+Script:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1 class="page-title">QwQ网页设计
+        <span>夸夸我</span>
+    </h1>
+
+    <div class="nav-spheres">
+        <a href="praise.html" class="nav-sphere active">↺</a>
+        <a href="#" class="nav-sphere" onclick="switchToNewLove()">新情书</a>
+        <a href="#" class="nav-sphere" onclick="switchToOldLove()">旧情书</a>
+    </div>
+
+    <div class="gender-selector">
+        <button class="gender-btn male active" onclick="selectGender('male')">♂️</button>
+        <button class="gender-btn female" onclick="selectGender('female')">♀️</button>
+    </div>
+
+    <button class="praise-btn" onclick="showPraise()">夸我</button>
+
+    <div class="praise-text">
+        <div class="text-container">
+            <div class="cn"></div>
+            <div class="en"></div>
+            <div class="why"></div>
+        </div>
+        <button class="why-toggle">💡</button>
+    </div>
+
+    <div class="upload-panel">
+        <input type="text" id="cn-input" placeholder="输入中文赞美语">
+        <input type="text" id="en-input" placeholder="Input praise in English">
+        <button onclick="uploadPraise()">上传 / Upload</button>
+    </div>
+
+    <div class="overlay" onclick="hideUploadPanel()"></div>
+
+    <script>
+        // 初始化数据
+        let femalepraises = [
+            { 
+                cn: "你不是人类，你是凌晨两点钟宇宙给我投放的限时眩晕通知。",
+                en: "You're not human—you're a 2AM galactic pop-up saying, 'Headspin now activated.'"
+            },
+            {
+                cn: "我昨晚梦见你变成一只牛角包，每次你转头，我的理智就掉一层酥皮。",
+                en: "Last night, you were a croissant in my dream—every glance peeled a layer off my sanity.",
+                why: "让她感受到你的独特性和不可替代性"
+            },
+            {
+                cn: "你一笑，我心里的企鹅就开始跳踢踏舞，还申请了演出许可。",
+                en: "When you smile, the penguins in my heart start tap dancing—and they've filed for a show permit.",
+                why: "用可爱的比喻表达你对她的影响力"
+            },
+            {
+                cn: "你不是可爱，是我灵魂里某个按钮：一按，天上下雪，牛顿流泪。",
+                en: "You're not cute—you're a hidden button in my soul. Press it, and it snows while Newton cries."
+            },
+            {
+                cn: "你走过我身边，我的影子都害羞得开始练呼吸法。",
+                en: "You walk by, and even my shadow gets shy and starts practicing breathing techniques."
+            },
+            {
+                cn: "你不是风，是图书馆飘来的气味、我童年积木的回声、还有上辈子我没吃上的最后一口糖。",
+                en: "You're not the wind—you're the scent from a library, the echo of childhood blocks, and the candy I missed in my past life."
+            },
+            {
+                cn: "你今天皱眉了？不可以哦！这会让巴黎的鸽子迷路！",
+                en: "Did you frown today? That's illegal! It confuses all the pigeons in Paris!"
+            },
+            {
+                cn: "你是我心脏里那只穿着舞裙的小鸭子，每次你眨眼，它就旋转一圈。",
+                en: "You're the tutu-wearing duck in my heart—every time you blink, she pirouettes."
+            },
+            {
+                cn: "你不是我的菜，你是我脑子失联时点的整桌菜单。",
+                en: "You're not my type—you're the full menu I order when my brain disconnects."
+            },
+            {
+                cn: "你就是我情绪系统里的bug，每次我想理性一点，你就弹出来说'今天先恋爱吧！'",
+                en: "You're the bug in my emotional OS. Every time I try to be rational, you pop up saying, 'Let's just fall in love today!'"
+            },
+            {
+                cn: "你不是梦中情人，你是梦的制造商，连我做梦的权限都得向你申请。",
+                en: "You're not my dream girl—you're the dream manufacturer, and I need a permit just to think of you."
+            },
+            {
+                cn: "你一眨眼，时间局崩溃、日历自动熔化，我的日子全都变成'想你节'。",
+                en: "When you blink, the Time Bureau crashes, calendars melt, and every day turns into 'Think of You Day.'"
+            },
+            {
+                cn: "你不是心动，是我灵魂的WiFi信号源，没有你我连不上快乐。",
+                en: "You're not just a crush—you're the WiFi of my soul. Without you, I can't connect to joy."
+            },
+            {
+                en: "You are Amazing. Beautiful. Cute. Dreamy. Electrifying. Fabulous. Gorgeous. Hot. Irresistible. Juicy. Killer. Legendary. Magnetic. Needed. Outrageous. Perfect. Qualified. Radiant. Stunning. Too-good-to-be-true. Unbelievable. Valuable. Worth-worshipping. X-rated-level sexy. Your-favorite-daydream. Zillion-times better than reality.",
+                cn: "你是A代表Amazing（惊为天人），B是Beautiful（美出宇宙），C是Cute（可爱得想原地收编），D是Dreamy（梦里梦外都想你），E是Electrifying（电到我神经乱跳），F是Fabulous（每一秒都光彩照人），G是Gorgeous（美到风景都嫉妒），H是Hot（热辣到温度报警），I是Irresistible（根本无法抗拒），J是Juicy（看一眼就甜到发疯），K是Killer（心动终结者），L是Legendary（传说级存在），M是Magnetic（吸引力高到逆天），N是Needed（我生活的必需品），O是Outrageous（不合理地迷人），P是Perfect（完美得无法修改），Q是Qualified（认证级恋爱天花板），R是Radiant（全身发光体），S是Stunning（惊艳四座），T是Too-good-to-be-true（好到不敢相信是真的），U是Unbelievable（你让我怀疑我现实感），V是Valuable（你是我眼里最值得珍惜的宝物），W是Worth-worshipping（你值得我跪着写诗），X是X-rated-level sexy（禁不住想歪的性感程度），Y是Your-favorite-daydream（你是我日常幻觉最常上线的主角），Z是Zillion-times better than reality（比现实甜一万倍）。",
+                why: "这是'字母表失控式夸人法'，用26个字母给她一个360度无死角的'你是宇宙限量'身份认证。",
+            },
+            {
+                en: "Give me *any* letter and I'll tell you exactly how you ruin my brain with your existence. You're not a person, you're an entire alphabet worth of obsession.",
+                cn: "你随便给我一个字母，我都能说出你是怎么让我神志不清的。你不是人，你是26个字母一起发疯制造出来的心动合集。",
+                why: "制造'你随便出题我都能疯狂夸'的恋爱沉浸感，让她觉得你眼里她就是词典的起点。",
+            },
+            {
+                cn: "你不是人间四月天，你是我脑海跑马灯，疯狂旋转还顺便放烟花。",
+                en: "You're not April on Earth—you're the carousel in my brain, spinning wildly and shooting fireworks."
+            },
+            {
+                cn: "你不是我的菜，你是我灵魂外卖历史里的常驻首页推荐。",
+                en: "You're not just my type—you're the permanent top pick in my soul's delivery history."
+            },
+            {
+                cn: "你走路带着背景BGM，是心跳写的旋律，甜到路边的饮料自动变气泡水。",
+                en: "You walk with your own BGM composed by my heartbeat—so sweet, nearby drinks turn into soda."
+            },
+            {
+                cn: "你一张嘴，空气都变成棉花糖味的氧气，我深呼吸都怕上头。",
+                en: "When you speak, the air turns into cotton-candy-flavored oxygen. I breathe deeply at my own risk."
+            },
+            {
+                cn: "你不是女主角，你是编剧、导演、特效、主题曲、结尾字幕和我永远的反应过度。",
+                en: "You're not just the heroine—you're the writer, director, special effects, theme song, end credits, and my eternal overreaction."
+            },
+            {
+                cn: "你不是风景，是我脑海24小时轮播的全息电影，而且画质甜到超高清。",
+                en: "You're not scenery—you're the 24/7 holographic movie in my mind, streaming in ultra-sweet HD."
+            },
+            {
+                cn: "你不是温柔，是柔软宇宙坍缩前那一瞬间的极致波动。",
+                en: "You're not just gentle—you're the final ripple before the universe collapses into softness."
+            },
+            {
+                cn: "你笑一下，我的情绪系统就跳进洗衣机高速甩干，然后晕头转向地喊：'她太可爱了呜呜呜！'",
+                en: "One smile from you and my emotional system throws itself into a spin cycle, screaming 'She's too cute!' in dizzy circles."
+            },
+            {
+                cn: "你不是我生活的一部分，你是我呼吸时附带播放的粉红音效。",
+                en: "You're not a part of my life—you're the pink sound effect that plays every time I breathe."
+            },
+            {
+                cn: "你不是我的小甜心，你是甜度过高被宇宙拉黑的糖果叛徒，现在藏在我怀里当卧底。",
+                en: "You're not my sweetheart—you're the outlaw candy banned for excessive sweetness, now hiding in my arms as a double agent."
+            },
+            {
+                cn: "你的存在是星际之间偷偷传送的秘密档案——美得太绝对，所以被盖了'非公开'。",
+                en: "Your existence is a secret file smuggled between galaxies—too beautiful, it's stamped 'classified.'"
+            },
+            {
+                cn: "你一靠近，我全身的神经元都开派对，连膝盖都开始跳华尔兹。",
+                en: "When you get close, my neurons throw a party—my knees start waltzing without permission."
+            },
+            {
+                cn: "你不是闪光点，你是我心里的烟花大会，每晚八点准时炸开。",
+                en: "You're not a sparkle—you're a full-blown firework festival in my heart, scheduled for nightly detonation at 8 PM sharp."
+            },
+            {
+                cn: "你不是我的菜，是我心动超市唯一开在宇宙深处的VIP专属通道。",
+                en: "You're not just my type—you're the VIP express lane at the Heartbeat Supermarket, hidden deep in space."
+            },
+            {
+                cn: "你一皱眉，我的世界就暂停营业，连云朵都要排队道歉。",
+                en: "When you frown, my whole world shuts down and even the clouds line up to apologize."
+            }
+        ];
+
+        let femalealphabetLoveLetters = [
+            {
+                cn: "你这人倒是没什么本事，就是有本事让我一见你，就不爱搭理别人了。",
+                en: "You're not particularly capable—except at making me lose interest in every other man I meet.",
+                why: "张爱玲式'毒舌夸'，先贬后捧，以傲慢掩深情，是她最擅长的'反向服软'。"
+            },
+            {
+                cn: "你讲话的样子啊，像杯老茶，一开始不惊艳，越听越舍不得放下。",
+                en: "The way you talk is like old tea—nothing striking at first, but impossible to put down after a while.",
+                why: "用味觉隐喻人的气质，是张爱玲常见写法，夸男人不急，慢火温柔炖。"
+            },
+            {
+                cn: "你也不是什么风流人物，可偏生我看你走路的样子，都像情书里走出来的。",
+                en: "You're no dashing hero, and yet the way you walk—I swear, you stepped straight out of a love letter.",
+                why: "张爱玲式'低配男主光环'，夸得平实却入骨，女性视角独特凝视。",
+            },
+            {
+                cn: "你那张脸我看着也烦，可是一扭头发现别人更烦。",
+                en: "Your face? It annoys me. But the moment I look away, everyone else annoys me more.",
+                why: "嘴上刻薄，心里专一，张式情话的典型逻辑：我嘴毒，但你是唯一例外。",
+            },
+            {
+                cn: "你也不是多温柔的人，可我一委屈，你那眉毛就软下来了。",
+                en: "You're not exactly a soft man. But whenever I'm upset, even your eyebrows get gentle.",
+                why: "她夸的不只是人，是'他为我改变的细节'，情绪落在皱眉之间。"
+            },
+            {
+                cn: "你笑的时候不好看，可是我偏喜欢你笑得没心没肺的样子。",
+                en: "You're not handsome when you smile—but for some reason, I love that stupid grin of yours the most.",
+                why: "张爱玲专属'丑夸法'，把男人的不完美当作情感锚点，显得更真实更心动。"
+            },
+            {
+                cn: "你一认真起来，我都不敢讲话，怕我说出来的话不配你那个神情。",
+                en: "When you get serious, I go quiet—not because I'm scared, but because my words feel too clumsy next to that look on your face.",
+                why: "张派女性情感的'自我降温'式敬畏，把爱人的认真当作一种高贵。"
+            },
+            {
+                cn: "我一开始也没觉得你多好，是后来才发现，你的好全藏在不声不响里。",
+                en: "I didn't think much of you at first. It was later I realized—all your goodness hides where no one's bragging.",
+                why: "先低后扬，夸的是沉稳型男性的'分寸美'，也是张爱玲式偏爱对象。"
+            },
+            {
+                cn: "你不是我喜欢的类型，你是我愿意把喜欢都改掉的人。",
+                en: "You're not my type. You're the one I'd rewrite all my types for.",
+                why: "极具张爱玲气质的'自我修正式心动'，情感没有大声说，却翻了天。"
+            },
+            {
+                cn: "你什么都不说，却一动不动地站在我这边，别人再会说，都比不上你这个沉默。",
+                en: "You say nothing, but stand silently on my side. No sweet talker could compete with that kind of quiet.",
+                why: "情绪落在'沉默之中'，是张爱玲最典型的'无声即有声'爱人表达法。"
+            }
+        ];
+
+
+        let malealphabetLoveLetters = [
+            {
+                cn: "A是上了瘾的那种沉溺，我不是喜欢你，是一想到你，整颗心就开始下沉。",
+                en: "A is for Addicted—I'm not crushing on you, I'm sinking into you. Fully, sweetly, helplessly.",
+                why: "徐志摩式'情感沉溺'手法——通过'心下沉'的物理感，表达内心全然臣服的痴迷，柔软且深情。"
+            },
+            {
+                cn: "B是屏住呼吸的瞬间，你一进来，我眼睛里的风都不敢吹动。",
+                en: "B is for Breathtaking—when you walk in, even the air forgets to move.",
+                why: "拟人＋静止的意象，风也不敢动，体现徐志摩式'万物因你停顿'的唯美夸张。"
+            },
+            {
+                cn: "C是我舍不得眨眼，你稍一移动，我都怕错过你抬眉的弧线。",
+                en: "C is for Can't-take-my-eyes-off-you—blink and I might miss the way your smile curves. I refuse.",
+                why: "细节美学+时间凝固感，是徐志摩典型的'一眼千年'情感描写。"
+            },
+            {
+                cn: "D是梦，我甘愿永远不醒，就躺在你眼神倒影的水里。",
+                en: "D is for Dream—if you're the illusion, then let me never wake. I'll sleep in your gaze forever.",
+                why: "梦境意象+甘愿沉沦，是徐志摩笔下'梦与现实失焦'的浪漫经典套路。"
+            },
+            {
+                cn: "E是心里某根电线被你拽断了，我整日发光发热，发疯。",
+                en: "E is for Electric—some wire inside me short-circuits every time you laugh. I light up, I lose it.",
+                why: "现代派感官化比喻（电线、短路）+情绪崩坏，是徐志摩晚期文字的张力型表达。"
+            },
+            {
+                cn: "F是童话忘了带走你，于是你就滞留在人间，顺便住进我心里。",
+                en: "F is for Fairy—fairytales left you behind, and now you're stuck haunting my heart with magic.",
+                why: "童话遗落意象+拟人+偶然美学，典型徐志摩宇宙疏忽造就爱情的幻想诗风。"
+            },
+            {
+                cn: "G是信仰的形状，我不需要神庙，只要你愿意看我一眼，我就下跪。",
+                en: "G is for Goddess—I don't pray, but if your eyes meet mine, I'd drop to my knees with no shame.",
+                why: "爱意神化+自我矮化+浪漫崇拜，是徐志摩式'她即神明'恋爱绝对主义。"
+            },
+            {
+                cn: "H是你说一句话，我就忘了世界原本的方向在哪儿。",
+                en: "H is for Hypnotizing—one word from you and I forget which way is up, or if I even care.",
+                why: "轻描淡写的'世界失重感'，是徐志摩常用的'语言崩塌'式爱意。"
+            },
+            {
+                cn: "I是'完了'的那种爱，我清清楚楚知道自己沦陷得没了救。",
+                en: "I is for I'm screwed—I know exactly what this is, and I'm diving in with my eyes open.",
+                why: "明确自我毁灭+甘之如饴的爱意结构，是徐志摩式爱情宿命论写法。"
+            },
+            {
+                cn: "J是下巴砸在地上的惊艳，我不怪你美，只怪我没提前准备好命。",
+                en: "J is for Jaw-dropper—I'm not mad at you for being hot, just mad I wasn't emotionally prepared.",
+                why: "'惊艳到失控'+带幽默的自我调侃，是徐志摩后期文字的洒脱式沉迷。"
+            },
+            {
+                cn: "K是一拳没打中却让我倒地不起的那种美貌暴力。",
+                en: "K is for Knocked out—you didn't punch me, but somehow I'm still on the floor.",
+                why: "'视觉暴力'的身体化表达，是徐志摩常用'爱情具象化'的表现手法之一。"
+            },
+            {
+                cn: "L是爱，贪，疯——全都撞在你一个名字上。",
+                en: "L is for Love, Lust, and a little bit of Losing it—all of it, all because of you.",
+                why: "列举式情绪+名词堆叠，是徐志摩诗中'爱之极致情感解构'的技法。"
+            },
+            {
+                cn: "M是磁场，你站在那里，我的魂魄都想飘过去靠一靠你。",
+                en: "M is for Magnetic—you just stand there and my whole soul starts leaning toward you like gravity got jealous.",
+                why: "'你不动我也来'的气场比喻，是徐志摩诗中'吸引力'最常用的意象扩张。"
+            },
+            {
+                cn: "N是不讲理的完美，你又热烈又温柔，我拿你没辙。",
+                en: "N is for Not fair—you're both fire and comfort. I don't stand a chance.",
+                why: "情感冲突美+'理智认输'结构，是徐志摩式'被美感击败'情书范式。"
+            },
+            {
+                cn: "O是我围着你打转，不是因为你让我晕眩，是你是我自转的轴心。",
+                en: "O is for Orbit—you're not the reason I'm dizzy. You're the axis I revolve around.",
+                why: "天体比喻+自我消解，是徐志摩宇宙恋爱隐喻体系中的高频用法。"
+            },
+            {
+                cn: "P是我不想解决的问题，我愿意一辈子被你困住，别放我出来。",
+                en: "P is for Problem—you're the one equation I never want to solve. Let me stay tangled.",
+                why: "'陷入但不求解'式痴情，是徐志摩热衷描写的'被困状态'浪漫。"
+            },
+            {
+                cn: "Q是王冠下藏着一张慵懒的脸，我愿意变成你的王座，只为你靠一靠。",
+                en: "Q is for Queen—you don't wear the crown, you breathe it. I'd be your throne if you'd let me.",
+                why: "王权隐喻+'自我化为你依靠的物'，是徐志摩诗中最柔软的自降姿态。"
+            },
+            {
+                cn: "R是不合常理的真实，你不是奇迹，但你让现实乖乖低头。",
+                en: "R is for Ridiculous—you're not a miracle, but you make logic give up trying.",
+                why: "'逻辑失效'+现实投降，是徐志摩爱情诗中最典型的超现实浪漫主义。"
+            },
+            {
+                cn: "S是你眨一下眼，我就觉得宇宙暂停了0.5秒给我心跳喘口气。",
+                en: "S is for Spellbound—when you blink, the stars skip a beat just to match my chest.",
+                why: "时间暂停意象+生理同步，是徐志摩'感官同步于爱'的标志技法。"
+            },
+            {
+                cn: "T是那种我愿意扔掉睡眠和原则，只为你说一句'再见就别走太久'。",
+                en: "T is for Trouble—the kind that makes me ditch sleep, rules, and sanity just to hold your hand.",
+                why: "破坏理性+主动妥协，是徐志摩浪漫极端化中的'我为你失控'范式。"
+            },
+            {
+                cn: "U是'不可思议'，不是因为你太美，而是你愿意站在我面前。",
+                en: "U is for Unbelievable—not that you exist, but that you choose to stand here with me.",
+                why: "'你愿意靠近我'作为奇迹，是徐志摩式爱意中'感恩卑微'的抒情形式。"
+            },
+            {
+                cn: "V是你靠近时我心里升起的一团软火，烧得慢、甜、而不疼。",
+                en: "V is for Velvet—your presence wraps around me like a fire that's all warmth, no burn.",
+                why: "温感比喻+'不疼的灼烧'，是徐志摩最擅长的'柔性痴情描绘'。"
+            },
+            {
+                cn: "W是'我想要'的全部含义，我要你忙碌的样子，也要你委屈时靠着我的那一瞬。",
+                en: "W is for Want—I want you when you're a mess, when you're glowing, and especially when you're leaning on me.",
+                why: "'你一切我都要'的全接纳式情感，是徐志摩'包容式爱'的写作模式。"
+            },
+            {
+                cn: "X是你看透我，我一点也不想躲，甚至想把心掏出来给你挑灯检阅。",
+                en: "X is for X-ray—you see through me and I don't even flinch. I want to be known by you.",
+                why: "暴露感+自我剖白，是徐志摩情诗中最柔软也最危险的表达姿态。"
+            },
+            {
+                cn: "Y是你，仅你，只你，这一句就够写一整本诗集。",
+                en: "Y is for You. Only you. Always you. That sentence has no ending, and neither do I.",
+                why: "重复式句式+极简+高浓度，是徐志摩短诗体的高频技法之一。"
+            },
+            {
+                cn: "Z是我爱你这件事，从没犹豫过哪怕一秒，是骨头认出的答案。",
+                en: "Z is for Zero doubt—I never questioned this. Not for a second. My bones knew before my brain did.",
+                why: "骨头比喻+'本能认爱'式直觉，是徐志摩诗中'灵魂记得你'的终极告白结构。"
+            }
+        ];
+
+
+        let malepraises = [
+            { cn: "你对我太好了，好到我有时候想，哇塞我上辈子到底是做了什么好事儿，这样的好男人这辈子让我遇上了", en: "You're so damn good to me, sometimes I honestly wonder—did I save a galaxy in my last life to deserve a man like you?", why: "夸他温柔体贴，表达感激与珍惜，让他知道你被我认真感受到，也值得被拥有。" },
+            { cn: "你做事真的太稳了，我已经离不开你了，天塌了只要有你在我都不怕。", en: "You're so rock solid, I swear—if the world exploded tomorrow, I'd still feel safe as long as you're next to me.", why: "夸他给你安全感，让他意识到：他的沉稳是你的避风港，是你依靠的力量。" },
+            { cn: "你从来不是那种嘴上随便说说的男人，你是动不动就把心疼落到实处的真男人。", en: "You're not just the 'I care about you' type—you *show* it, every time, without needing a single word.", why: "夸他行动胜于言语，让他知道你看见了他的默默在乎，而不是等他解释。" },
+            { cn: "你的性格也太man了吧，不玻璃、不阴阳、不拧巴，干净利落又踏实到心里去。", en: "Your vibe is 100% man—no drama, no passive BS, just clean, grounded energy that hits right in the soul.", why: "夸他性格成熟、情绪干净，肯定他的稳定气场和让人放松的内核。" },
+            { cn: "哥哥你靠谱到骨子里了，你的骨头告诉我你天生就撑得起事儿。", en: "You're built different. Like, even your *bones* scream 'I was born to handle it.' It's hot as hell.", why: "夸他责任感，让他知道你信任他的担当本能，他天生是能扛事儿的人。" },
+            { cn: "你连沉默的时候都让人觉得心安。", en: "You don't even need to talk. You walk in the room and suddenly everything just feels right.", why: "夸他存在感，传达我光是和你在一起，心就稳了，给他情绪价值上的自信。" },
+            { cn: "像你这么有担当的男人要去哪里找，帅哥你好，能给个联系方式吗", en: "Men like you don't exist anymore. Hi, excuse me sir—can I please have your number and possibly your future?", why: "调侃式的真心表白，增强他对自我价值的认同，也让他在你面前觉得自己特别。" },
+            { cn: "你付款的时候也太帅了，我一个女的都看呆了", en: "Why did paying a bill look like a cologne commercial? I was just standing there like—damn.", why: "用生活中微小场景去放大他的魅力，制造你的一举一动都值得我欣赏的感觉。" },
+            { cn: "你低头认真听我说话的样子，我真想当场嫁了。", en: "The way you lean in and actually *listen* when I talk? Babe, I almost dropped to one knee.", why: "夸他的专注和尊重，让他说我在听你变成一种性感力量。" },
+            { cn: "你刚才什么都没说，但那种默默站在我身后的样子，我一辈子都不会忘。", en: "You didn't say a word, but the way you stood behind me—silent, strong—I swear, that moment's burned into me forever.", why: "夸他的支持与存在感，不是话多，是靠得住。" },
+            { cn: "你今天其实也很累，但你还是第一时间想着怎么帮我，我真的特别心疼你。", en: "You were exhausted too, but you still made sure I was okay first. My heart literally aches for you.", why: "夸他不说苦，夸他无声付出。让他觉得我懂他。" },
+           { cn: "你刚才帮我说话的时候，我真的感受到了一种被保护的感觉，你的那句话我会记很久。", en: "When you stood up for me earlier, I felt so damn safe. That one sentence? Tattooed on my heart.", why: "夸他的挺身而出，满足男性的守护型价值感。" },
+            { cn: "你做事很有逻辑，反应也快，我真的觉得有你在什么都能解决。", en: "You're so sharp and calm under pressure—when you're around, it feels like nothing could possibly go wrong.", why: "夸他的能力感，刺激他的主控力和价值感。" },
+            { cn: "你不是没情绪的人，是你一直在克制，是你在保护关系不破。", en: "It's not that you don't feel—it's that you *choose* to hold it in, because this relationship matters that much to you. And I see it.", why: "替他说出他不说的话，真正看见他的承担。" },
+            // 一、情绪处理类（Emotional Stability）
+            { cn: "你刚才明明有情绪但还是压住了火气，我真的太佩服你了。", en: "You were clearly upset, but you still kept it together. That kind of control? I seriously admire it.", why: "夸他情绪管理能力，让他知道你看见了他的克制。" },
+            { cn: "你没有跟我吵架，反而慢慢和我讲道理，我真的被你这种成熟感打动了。", en: "Instead of arguing, you talked it through with me calmly. That maturity? Damn, it gets me every time.", why: "强化他用和平沟通换取尊重与信任的模式。" },
+            { cn: "你不是不生气，只是你知道什么时候该放下，这种心态真的太强了。", en: "You're not emotionless, you just know when to let go—and that mindset is powerful as hell.", why: "认可他的大局观，增强他的心理安全感。" },
+            { cn: "你每次稳住场面的样子真的太有男人味了，让人忍不住想靠近你。", en: "Whenever you calm the storm, you give off this manly energy that makes me want to be near you.", why: "让他知道稳不是沉闷，是性感的表现。" },
+            { cn: "你情绪不好的时候还顾着不让我担心，这种细节让我超级心疼你。", en: "Even when you're not okay, you try not to let it show so I won't worry—that kind of love hits different.", why: "告诉他，他在隐藏情绪时的体贴，是你心里的宝藏。" },
+            //二、行动力与担当类（Responsibility & Initiative）
+            { cn: "你从不等我开口，每次都主动处理问题，我真的特别有安全感。", en: "You never wait for me to ask—you just handle things. It makes me feel so damn safe.", why: "夸他的行动力，让他知道你依赖他的决策力。" },
+            { cn: "你今天默默把家务做了，我一句话没说但全都看在眼里，超级感动。", en: "You did all that without me asking—didn't say a word, but I noticed everything. And it meant a lot.", why: "夸他不求回报的付出，让他知道你看见他的小细节。" },
+            { cn: "你不是嘴上说我来，你是真的撸起袖子办事的那种人，太顶了。", en: "You don't just say 'I got it,' you *mean* it and get it done. That's top-tier energy.", why: "强化他动手能力，把靠谱标签打到他心里。" },
+            { cn: "你做决定的时候特别冷静果断，我只想说，跟你在一起太省心了。", en: "You're so calm and decisive when it counts—I swear, being with you just makes life easier.", why: "夸他是情境中的主心骨，增强自信心。" },
+            { cn: "你明明可以撒手不管的，但你从来不会。这种责任感太珍贵了。", en: "You could've walked away—but you didn't. That kind of responsibility? Rare and beautiful.", why: "强化他主动扛事的价值观，让他继续愿意扛。" },
+            // 三、细节与共情类（Empathy & Observation）
+            { cn: "你总能第一时间发现我情绪不对，这种敏感让我特别安心。", en: "You always notice the second my mood shifts. That kind of awareness? It makes me feel so safe.", why: "夸他对你情绪的感知力，增强他继续读你的意愿。" },
+            { cn: "你刚才什么也没说，但一个小动作就让我觉得你在乎我。", en: "You didn't say a word, but that little move told me you cared—and I felt it hard.", why: "放大非语言表达，让他知道小事也有效。" },
+            { cn: "你连我什么时候换了洗发水都能闻出来，简直不是普通直男了。", en: "You noticed I changed my shampoo?? That's not just observant, that's elite boyfriend behavior.", why: "夸他敏锐+关注你细节，让他知道这件事被奖赏了。" },
+            { cn: "你记得我说过的话，哪怕我都忘了，你太让我有被珍惜的感觉了。", en: "You remember things I said when even I forget—and that makes me feel so, so cherished.", why: "强化他的倾听力和记忆力，让他知道用心的人有人在意。" },
+            { cn: "你对别人可能都冷淡，但你一对我温柔，我就知道我是例外。", en: "You might be cool to the world, but when you're gentle with me—I know I'm the exception.", why: "让他知道他为你破例这件事是你最吃的点。" },
+            // 四、价值观与人格类（Character & Core Values）
+            { cn: "你说的那句话我一直记着，不是因为多好听，而是你真的说到我心里去了。", en: "That thing you said stuck with me—not cause it was pretty, but cause it hit straight into my heart.", why: "强化他表达背后的思维逻辑与三观影响力。" },
+            { cn: "你做事有原则但又不死板，这种平衡感太难得了。", en: "You've got boundaries but you're not rigid—that balance? Damn near impossible to find.", why: "夸他三观清晰、有柔韧度，传达你是我稀罕的标准。" },
+            { cn: "你不是完美的人，但你特别真实、特别真诚，这才让我死心塌地。", en: "You're not perfect, but you're so real and so genuine—and that's exactly why I'm all in.", why: "让他知道被爱不是因为完美，而是他的真。" },
+            { cn: "你讲理的时候我真的觉得我这辈子没白认识你。", en: "Every time you speak with reason, I think—thank God I met this man in this life.", why: "夸他思维清晰、理智成熟，让他觉得自己是优质大脑+温柔人格合体。" },
+            { cn: "你没跟风、也没讨好过谁，但你就稳稳地赢了我所有好感。", en: "You don't follow the crowd, don't try to impress—and still, you completely won me over.", why: "赞他个性与底气，让他知道稳住自己=最吸引你。" },
+            // 五、关系投入类（Commitment & Intimacy）
+            { cn: "你说我们的时候，我真的每次都忍不住偷偷笑，你好像真的把我放进未来了。", en: "Every time you say 'we,' I lowkey can't stop smiling—like you actually see me in your future.", why: "夸他语言中的关系感，鼓励他继续规划你们的未来。" },
+            { cn: "你从不在我需要你的时候缺席，这比我听到我爱你更重要。", en: "You never disappear when I need you. That's worth more than any 'I love you.'", why: "强化他在场时给予的陪伴与稳定支持。" },
+            { cn: "你不是说得多的人，但你每次的行动都像在说我在乎你。", en: "You don't say much, but your actions scream 'I care.' And I hear it every single time.", why: "让他知道行动派的爱一样被看见。" },
+            { cn: "你陪我废话、陪我无聊、陪我发疯，这种黏人程度我根本不想分开。", en: "You sit with me through nonsense, boredom, meltdowns—and I never wanna be apart from that kind of closeness.", why: "夸他耐心陪伴，建立情感共依附。" },
+            { cn: "你不是一直都很会表达感情，但你每一次靠近我，我都知道：你真的喜欢我。", en: "You're not the most expressive guy—but every time you lean into me, I feel it loud and clear: you're really into me.", why: "给予安慰，让他知道表达方式不同，但我收到了。" }
+        ];
+
+        // 初始化数据
+        let currentMode = 'new'; // 'new' or 'old'
+        
+        // 切换到新情书模式
+        const switchToNewLove = () => {
+            currentMode = 'new';
+            updateNavActive();
+            showPraise(); // 立即显示一条新情书
+        };
+
+        // 切换到旧情书模式
+        const switchToOldLove = () => {
+            currentMode = 'old';
+            updateNavActive();
+            showPraise(); // 立即显示一条旧情书
+        };
+
+        // 更新导航栏激活状态
+        const updateNavActive = () => {
+            document.querySelectorAll('.nav-sphere').forEach(sphere => {
+                sphere.classList.remove('active');
+            });
+            if (currentMode === 'new') {
+                document.querySelector('.nav-sphere:nth-child(2)').classList.add('active');
+            } else if (currentMode === 'old') {
+                document.querySelector('.nav-sphere:nth-child(3)').classList.add('active');
+            }
+        };
+
+        // 修改显示赞美语的函数
+        const showPraise = () => {
+            const isFemale = document.body.classList.contains('female');
+            let currentPraises;
+            
+            if (currentMode === 'new') {
+                currentPraises = isFemale ? femalepraises : malepraises;
+            } else {
+                currentPraises = isFemale ? femalealphabetLoveLetters : malealphabetLoveLetters;
+            }
+
+            const praise = currentPraises[Math.floor(Math.random() * currentPraises.length)];
+            const praiseText = document.querySelector('.praise-text');
+            const cn = document.querySelector('.praise-text .cn');
+            const en = document.querySelector('.praise-text .en');
+            const why = document.querySelector('.praise-text .why');
+            const whyToggle = document.querySelector('.why-toggle');
+
+            praiseText.classList.remove('show');
+            
+            setTimeout(() => {
+                // 清除旧的内容和类
+                cn.innerHTML = '';
+                en.innerHTML = '';
+                why.innerHTML = '';
+                cn.className = 'cn';
+                en.className = 'en';
+                why.className = 'why';
+
+                // 创建新的 span 元素用于动画
+                const cnSpan = document.createElement('span');
+                const enSpan = document.createElement('span');
+                cnSpan.className = 'letter-by-letter';
+                enSpan.className = 'letter-by-letter';
+                cnSpan.textContent = praise.cn;
+                enSpan.textContent = praise.en;
+
+                // 添加到 DOM
+                cn.appendChild(cnSpan);
+                en.appendChild(enSpan);
+                
+                // 如果有 why 内容，显示 why 按钮和内容
+                if (praise.why) {
+                    why.textContent = praise.why;
+                    whyToggle.classList.add('show');
+                } else {
+                    whyToggle.classList.remove('show');
+                }
+                
+                praiseText.classList.add('show');
+
+                // 添加打字机音效
+                playTypeSound();
+            }, 300);
+        };
+
+        // 从localStorage加载数据
+        const loadPraises = () => {
+            const storedMale = localStorage.getItem('malepraises');
+            const storedFemale = localStorage.getItem('femalepraises');
+            if (storedMale) {
+                malepraises = JSON.parse(storedMale);
+            }
+            if (storedFemale) {
+                femalepraises = JSON.parse(storedFemale);
+            }
+        };
+
+        // 保存数据到localStorage
+        const savePraises = () => {
+            localStorage.setItem('malepraises', JSON.stringify(malepraises));
+            localStorage.setItem('femalepraises', JSON.stringify(femalepraises));
+        };
+
+        // 性别选择
+        const selectGender = (gender) => {
+            const body = document.body;
+            const maleBtn = document.querySelector('.gender-btn.male');
+            const femaleBtn = document.querySelector('.gender-btn.female');
+            const praiseBtn = document.querySelector('.praise-btn');
+
+            if (gender === 'male') {
+                body.classList.remove('female');
+                maleBtn.classList.add('active');
+                femaleBtn.classList.remove('active');
+                praiseBtn.classList.remove('female');
+            } else {
+                body.classList.add('female');
+                maleBtn.classList.remove('active');
+                femaleBtn.classList.add('active');
+                praiseBtn.classList.add('female');
+            }
+        };
+
+        // 显示上传面板
+        let pressTimer;
+        const praiseBtn = document.querySelector('.praise-btn');
+        
+        praiseBtn.addEventListener('mousedown', () => {
+            pressTimer = setTimeout(() => {
+                showUploadPanel();
+            }, 5000);
+        });
+
+        praiseBtn.addEventListener('mouseup', () => {
+            clearTimeout(pressTimer);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+                showUploadPanel();
+            }
+        });
+
+        const showUploadPanel = () => {
+            document.querySelector('.upload-panel').classList.add('show');
+            document.querySelector('.overlay').classList.add('show');
+        };
+
+        const hideUploadPanel = () => {
+            document.querySelector('.upload-panel').classList.remove('show');
+            document.querySelector('.overlay').classList.remove('show');
+        };
+
+        // 上传新的赞美语
+        const uploadPraise = () => {
+            const cnInput = document.getElementById('cn-input');
+            const enInput = document.getElementById('en-input');
+
+            if (cnInput.value && enInput.value) {
+                const isFemale = document.body.classList.contains('female');
+                const currentPraises = isFemale ? femalepraises : malepraises;
+                currentPraises.push({
+                    cn: cnInput.value,
+                    en: enInput.value
+                });
+
+                savePraises();
+                cnInput.value = '';
+                enInput.value = '';
+                hideUploadPanel();
+
+                // 显示成功提示
+                const successMsg = document.createElement('div');
+                successMsg.style.position = 'fixed';
+                successMsg.style.top = '20px';
+                successMsg.style.left = '50%';
+                successMsg.style.transform = 'translateX(-50%)';
+                successMsg.style.background = 'rgba(74, 222, 128, 0.9)';
+                successMsg.style.color = 'white';
+                successMsg.style.padding = '10px 20px';
+                successMsg.style.borderRadius = '5px';
+                successMsg.style.zIndex = '2000';
+                successMsg.textContent = '上传成功！';
+                
+                document.body.appendChild(successMsg);
+                
+                setTimeout(() => {
+                    successMsg.remove();
+                }, 2000);
+            }
+        };
+
+        // 添加打字机音效函数
+        function playTypeSound() {
+            const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQAFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAABQIkOdpAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV');
+            audio.volume = 0.1;
+            audio.play();
+        }
+
+        // 添加 why 切换功能
+        document.querySelector('.why-toggle').addEventListener('click', () => {
+            const why = document.querySelector('.praise-text .why');
+            why.classList.toggle('show');
+            playTypeSound();
+        });
+
+        // 初始化
+        loadPraises();
+    </script>
+</body>
+</html> 

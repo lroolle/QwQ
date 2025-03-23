@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>DreamCube - 梦境轨迹定位系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(180deg, #0E0C2A 0%, #000033 100%);
+            color: #C9F65E;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+        }
+
+        #dream-input {
+            background: #0E0C2A;
+            border: 2px solid #C9F65E;
+            color: #C9F65E;
+            padding: 10px 20px;
+            width: 400px;
+            margin: 10px;
+        }
+
+        #ctas {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+        }
+
+        .cta-button {
+            background: #0E0C2A;
+            border: 2px solid #FF70A6;
+            color: #FF70A6;
+            padding: 10px 25px;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-block;
+            pointer-events: auto;
+        }
+
+        .cta-button:hover {
+            background: #FF70A6;
+            color: #0E0C2A;
+        }
+
+        .tooltip {
+            position: fixed;
+            color: #C9F65E;
+            background: rgba(14,12,42,0.8);
+            padding: 5px;
+            border-radius: 3px;
+            display: none;
+            pointer-events: none;
+            font-size: 14px;
+            opacity: 0;
+        }
+
+        .axis-label {
+            position: fixed;
+            color: #00E0FF;
+            background: rgba(14,12,42,0.8);
+            padding: 3px 8px;
+            border-radius: 3px;
+            pointer-events: none;
+            font-size: 12px;
+            opacity: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #C9F65E;
+            animation: moveStar 5s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes moveStar {
+            0% { transform: translateY(0vh); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .webgl-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h1 style="color: #00E0FF;">DreamCube</h1>
+        <input type="text" id="dream-input" placeholder="输入你的梦境描述...">
+    </div>
+
+    <div id="ctas">
+        <button class="cta-button" onclick="resetScene()">再次梦游</button>
+        <button class="cta-button" onclick="exploreDream()">梦境探索</button>
+    </div>
+
+    <script>
+        let scene, camera, renderer, raycaster, mouse;
+        let cubeEdges, axisLabels = [];
+        let points = [], lines = [], stars = [], tooltips = [];
+        let activePoint = null;
+        let currentInput = "";
+        const animationDuration = 1.5;
+
+        // 三维坐标系参数
+        const cubeSize = 10;
+        const cubeFaceCenters = [
+            { x: 0, y: 0, z: 5, axis: '前(Z+)', labelPos: { x: 0, y: -6, z: 5 } },
+            { x: 0, y: 0, z: -5, axis: '后(Z-)', labelPos: { x: 0, y: -6, z: -5 } },
+            { x: 5, y: 0, z: 0, axis: '右(X+)', labelPos: { x: 5, y: -6, z: 0 } },
+            { x: -5, y: 0, z: 0, axis: '左(X-)', labelPos: { x: -5, y: -6, z: 0 } },
+            { x: 0, y: 5, z: 0, axis: '上(Y+)', labelPos: { x: 0, y: 5, z: -6 } },
+            { x: 0, y: -5, z: 0, axis: '下(Y-)', labelPos: { x: 0, y: -5, z: -6 } }
+        ];
+
+        function init() {
+            // 初始化场景
+            scene = new THREE.Scene();
+            
+            // 初始化相机
+            camera = new THREE.PerspectiveCamera(
+                45,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(20, 20, 20);
+            camera.lookAt(0, 0, 0);
+            
+            // 初始化渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.domElement.className = 'webgl-container';
+            document.body.appendChild(renderer.domElement);
+            
+            // 初始化交互
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2(-100, -100);
+            
+            // 添加环境光
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            // 添加点光源
+            const pointLight = new THREE.PointLight(0xC9F65E, 1, 100);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+            
+            // 事件监听
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('click', onMouseClick);
+            
+            // 初始化场景内容
+            generateScene();
+            animate();
+        }
+
+        function createCoordinateSystem() {
+            // 创建立方体边框
+            const cubeEdgesGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize));
+            const cubeEdgesMat = new THREE.LineBasicMaterial({ 
+                color: 0x00E0FF,
+                transparent: true,
+                opacity: 0
+            });
+            cubeEdges = new THREE.LineSegments(cubeEdgesGeom, cubeEdgesMat);
+            scene.add(cubeEdges);
+            
+            // 创建坐标轴标签
+            cubeFaceCenters.forEach(face => {
+                const label = document.createElement('div');
+                label.className = 'axis-label';
+                label.textContent = face.axis;
+                label.style.opacity = 0;
+                document.body.appendChild(label);
+                axisLabels.push(label);
+            });
+        }
+
+        async function generateScene(inputValue = "默认 梦境 描述 需要 输入 六个 关键词") {
+            // 清除现有对象
+            points.forEach(p => {
+                scene.remove(p.mesh);
+                document.body.removeChild(p.tooltip);
+            });
+            lines.forEach(l => scene.remove(l));
+            stars.forEach(s => document.body.removeChild(s));
+            axisLabels.forEach(l => l.remove());
+            
+            points = [];
+            lines = [];
+            stars = [];
+            tooltips = [];
+            axisLabels = [];
+            activePoint = null;
+
+            // 处理输入内容
+            const inputKeywords = inputValue.split(/[\s，。、！？]+/).filter(k => k).slice(0,6);
+            const keywords = inputKeywords.length >=6 
+                ? inputKeywords 
+                : [...inputKeywords, ...Array(6 - inputKeywords.length).fill("梦境元素")];
+
+            // 创建坐标系
+            createCoordinateSystem();
+
+            // 执行动画序列
+            await showCoordinateSystem();
+            await showPoints(keywords);
+            await showLabels();
+            await connectLines();
+        }
+
+        function showCoordinateSystem() {
+            return new Promise(resolve => {
+                gsap.to(cubeEdges.material, {
+                    opacity: 1,
+                    duration: animationDuration,
+                    ease: "power2.inOut",
+                    onComplete: resolve
+                });
+            });
+        }
+
+        function showPoints(keywords) {
+            return new Promise(resolve => {
+                cubeFaceCenters.forEach((face, index) => {
+                    const geometry = new THREE.SphereGeometry(0.4, 32, 32);
+                    const material = new THREE.MeshPhongMaterial({ 
+                        color: 0xC9F65E,
+                        transparent: true,
+                        opacity: 0
+                    });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.position.set(face.x, face.y, face.z);
+                    
+                    // 创建标签
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = keywords[index];
+                    tooltip.style.opacity = 0;
+                    document.body.appendChild(tooltip);
+                    
+                    points.push({ mesh, tooltip, keyword: keywords[index] });
+                    scene.add(mesh);
+                });
+
+                // 逐个显示点
+                let tl = gsap.timeline();
+                points.forEach((p, index) => {
+                    tl.to(p.mesh.material, {
+                        opacity: 1,
+                        duration: animationDuration/2,
+                        ease: "back.out(1.7)"
+                    }, index * 0.5);
+                });
+                tl.call(() => resolve());
+            });
+        }
+
+        function showLabels() {
+            return new Promise(resolve => {
+                let tl = gsap.timeline();
+                points.forEach((p, index) => {
+                    tl.to(p.tooltip, {
+                        opacity: 1,
+                        duration: animationDuration/2,
+                        ease: "power1.out"
+                    }, index * 0.3);
+                });
+                tl.call(() => resolve());
+            });
+        }
+
+        function connectLines() {
+            return new Promise(resolve => {
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(
+                    points.map(p => p.mesh.position)
+                );
+                const lineMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0xFF70A6,
+                    transparent: true,
+                    opacity: 0
+                });
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                lines.push(line);
+                scene.add(line);
+
+                // 逐段显示连线
+                gsap.to(line.material, {
+                    opacity: 1,
+                    duration: animationDuration * 2,
+                    ease: "power2.inOut",
+                    onComplete: resolve
+                });
+            });
+        }
+
+        function resetScene() {
+            currentInput = document.getElementById('dream-input').value || "默认 梦境 描述 需要 输入 六个 关键词";
+            generateScene(currentInput);
+            if(activePoint) activePoint.material.color.set(0xC9F65E);
+        }
+
+        function exploreDream() {
+            const elements = points.map(p => p.keyword).join('\n');
+            alert(`当前梦境元素分解：\n${elements}`);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // 更新坐标轴标签位置
+            axisLabels.forEach((label, index) => {
+                const pos = cubeFaceCenters[index].labelPos;
+                const vector = new THREE.Vector3(pos.x, pos.y, pos.z);
+                vector.project(camera);
+                label.style.left = (vector.x * window.innerWidth/2 + window.innerWidth/2) + 'px';
+                label.style.top = (-vector.y * window.innerHeight/2 + window.innerHeight/2) + 'px';
+            });
+            
+            // 相机动画
+            const time = Date.now() * 0.001;
+            camera.position.x = Math.sin(time * 0.5) * 25;
+            camera.position.z = Math.cos(time * 0.5) * 25;
+            camera.lookAt(0, 0, 0);
+            
+            // 更新标签位置
+            points.forEach(p => {
+                const pos = p.mesh.position.clone();
+                pos.project(camera);
+                p.tooltip.style.left = (pos.x * window.innerWidth/2 + window.innerWidth/2) + 'px';
+                p.tooltip.style.top = (-pos.y * window.innerHeight/2 + window.innerHeight/2 - 30) + 'px';
+            });
+            
+            renderer.render(scene, camera);
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            // 显示对应标签
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(points.map(p => p.mesh));
+            
+            points.forEach(p => p.tooltip.style.display = 'none');
+            
+            if(intersects.length > 0) {
+                const point = points.find(p => p.mesh === intersects[0].object);
+                point.tooltip.style.display = 'block';
+                
+                if(!point.hovered) {
+                    gsap.to(point.mesh.scale, { x: 1.5, y: 1.5, z: 1.5, duration: 0.3 });
+                    point.hovered = true;
+                }
+            } else {
+                points.forEach(p => {
+                    if(p.hovered) {
+                        gsap.to(p.mesh.scale, { x: 1, y: 1, z: 1, duration: 0.3 });
+                        p.hovered = false;
+                    }
+                });
+            }
+        }
+
+        function onMouseClick() {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(points.map(p => p.mesh));
+            
+            if(intersects.length > 0) {
+                const point = points.find(p => p.mesh === intersects[0].object);
+                
+                if(activePoint) {
+                    activePoint.material.color.set(0xC9F65E);
+                }
+                
+                activePoint = point.mesh;
+                activePoint.material.color.set(0xFF70A6);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // 输入框回车事件
+        document.getElementById('dream-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') resetScene();
+        });
+
+        // 错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error("发生错误:", message, "在", source, "第", lineno, "行");
+            return true;
+        };
+
+        init();
+    </script>
+</body>
+</html>
