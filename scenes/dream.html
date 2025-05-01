@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Walker</title>
+      <style>
+        body {
+          margin: 0;
+          overflow: hidden;
+          background-color: #000;
+          touch-action: none;
+        }
+        canvas {
+          display: block;
+        }
+      </style>
+    </head>
+    <body>
+    <canvas id="orbitalCanvas"></canvas>
+
+    <!-- <div id="dreamText" class="dream-text"></div>
+    <div class="controls">
+        <button class="control-btn" id="createDream">创造梦境</button>
+        <button class="control-btn" id="shareDream">分享梦境</button>
+        <button class="control-btn" id="clearDream">清除梦境</button>
+    </div> -->
+
+ 
+    <script>
+    const canvas = document.getElementById('orbitalCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    
+    // 参数配置表（放大6倍后，圆环缩小一半）
+    const params = {
+      R: 900,         // 原150 → 放大6倍
+      A1: 120, A2: 90, // 原20、15 → 放大6倍
+      n: 3, m: 2, p: 4,
+      w1: 0.3, w2: 0.2, w3: 0.4,
+      H: 360,         // 原60 → 放大6倍
+      r0: 12,         // 原4 → 放大6倍后缩小一半
+      alpha: 4.5,     // 原1.5 → 放大6倍后缩小一半
+      f: 0.5,
+      phiBase: Math.PI / 4,
+      theta0: 0,
+      omegaRot: 0.2,
+      baseGlow: 0.3,
+      beta: 0.4,
+      d_thresh: 600,   // 原100 → 放大6倍
+      resonance_min: 0.7,
+      gamma: 60,       // 原10 → 放大6倍
+      k: 0.08,         // 不随放大变化
+      E_critical: 3,
+      mu: 300          // 原50 → 放大6倍
+    };
+    
+    let time = 0;
+    const rings = [];
+    const maxRings = 60;
+    let mouseDown = false;
+    let mouseDownTime = 0;
+    let startX, startY;
+    let trailPoints = [];
+    let isDragging = false;
+    let rippleActive = false;
+    let shakeAmplitude = 0;
+    
+    // 新增：视角控制参数
+    let viewAngleX = 0; // 当前绕 X 轴的旋转角度（用于正视/俯视切换）
+    let targetViewAngleX = 0; // 目标角度
+    let viewTransitionSpeed = 0.05; // 视角过渡速度
+    
+    class Ring {
+      constructor(index) {
+        this.index = index;
+        this.theta = (Math.PI * 2 / maxRings) * index;
+        this.phi = params.phiBase + Math.random() * Math.PI * 2;
+        this.omegaRotOffset = params.omegaRot + (Math.random() - 0.5) * 0.1;
+        this.x = 0; this.y = 0; this.z = 0;
+        this.rx = 0; this.ry = 0; this.rz = 0;
+        this.radius = 0;
+        this.glow = 0;
+        this.clickEffect = 0;
+        this.burstTime = 0;
+        this.opacity = 1;
+        this.active = true;
+      }
+    
+      update(t) {
+        if (!this.active) {
+          const elapsed = t - this.burstTime;
+          if (elapsed < 1) {
+            this.opacity = 1 - elapsed;
+          } else {
+            this.rebirth();
+          }
+        }
+    
+        // 轨迹方程
+        const { R, A1, A2, n, m, p, w1, w2, w3, H } = params;
+        const { index, theta } = this;
+        const dynamicTheta = theta + index * 0.1;
+        const term = A1 * Math.cos(n * dynamicTheta + w1 * t) + A2 * Math.sin(m * dynamicTheta - w2 * t);
+        
+        let x, y, z;
+        x = (R + term) * Math.cos(dynamicTheta);
+        y = (R + term) * Math.sin(dynamicTheta);
+        z = H * Math.sin(p * dynamicTheta + w3 * t);
+    
+        // 应用当前视角旋转
+        const cosX = Math.cos(viewAngleX);
+        const sinX = Math.sin(viewAngleX);
+        this.rx = x;
+        this.ry = y * cosX - z * sinX;
+        this.rz = y * sinX + z * cosX;
+    
+        // 半径呼吸（缩小一半）
+        this.radius = params.r0 + params.alpha * Math.sin(2 * Math.PI * params.f * t + this.phi);
+    
+        // 自转角度
+        const rotAngle = params.theta0 + this.omegaRotOffset * t;
+        this.x = this.rx * Math.cos(rotAngle) - this.ry * Math.sin(rotAngle);
+        this.y = this.rx * Math.sin(rotAngle) + this.ry * Math.cos(rotAngle);
+        this.z = this.rz;
+    
+        // 发光强度
+        this.glow = params.baseGlow + params.beta * Math.abs(Math.sin(2 * Math.PI * params.f * t + this.phi)) + this.clickEffect;
+        this.clickEffect *= 0.95;
+      }
+    
+      draw(ctx, cx, cy, scale) {
+        if (!this.active) return;
+        const x = cx + this.x * scale;
+        const y = cy + this.y * scale * 0.5;
+        const radius = this.radius * (1 + this.glow) * scale * 0.5; // 圆圈缩小一半
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        const glow = Math.min(1, this.glow);
+        ctx.strokeStyle = `rgba(255,255,255,${glow * this.opacity})`;
+        ctx.lineWidth = 2 + glow * 2;
+        ctx.shadowBlur = 10 + glow * 15;
+        ctx.shadowColor = 'white';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+    
+      onClickImpact(xc, yc, zc, t) {
+        const dx = this.rx - xc;
+        const dy = this.ry - yc;
+        const dz = this.rz - zc;
+        const d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        const impact = params.gamma * Math.exp(-params.k * d) * Math.sin(2 * Math.PI * 0.5 * (t - this.burstTime));
+        this.clickEffect += impact * 0.1;
+      }
+    
+      burst(t) {
+        this.active = false;
+        this.burstTime = t;
+      }
+    
+      rebirth() {
+        this.active = true;
+        this.opacity = 1;
+        this.phi = params.phiBase + Math.random() * Math.PI * 2;
+      }
+    }
+    
+    for (let i = 0; i < maxRings; i++) {
+      rings.push(new Ring(i));
+    }
+    
+    canvas.addEventListener('wheel', e => {
+      if (e.deltaY < 0) {
+        targetViewAngleX = Math.max(targetViewAngleX - 0.2, -Math.PI / 2); // 上滑到俯视
+      } else {
+        targetViewAngleX = Math.min(targetViewAngleX + 0.2, Math.PI / 2); // 下滑回正视
+      }
+    });
+    
+    canvas.addEventListener('mousedown', e => {
+      mouseDown = true;
+      mouseDownTime = time;
+      startX = e.clientX;
+      startY = e.clientY;
+      isDragging = false;
+    });
+    canvas.addEventListener('mouseup', e => {
+      mouseDown = false;
+      const duration = time - mouseDownTime;
+      if (isDragging) {
+        handleSwipeTrail(e.clientX, e.clientY);
+      } else {
+        if (duration >= 1.5) {
+          triggerBurst(e.clientX, e.clientY, time);
+        } else {
+          triggerRipple(e.clientX, e.clientY, time);
+        }
+      }
+    });
+    canvas.addEventListener('mousemove', e => {
+      if (mouseDown) {
+        isDragging = true;
+        trailPoints.push({x: e.clientX, y: e.clientY});
+        if (trailPoints.length > 10) trailPoints.shift();
+      }
+    });
+    
+    function triggerRipple(x, y, t) {
+      const cx = width / 2;
+      const cy = height / 2;
+      const scale = 0.4;
+      for (let ring of rings) {
+        const worldX = ring.x * scale + cx;
+        const worldY = ring.y * scale + cy;
+        const dx = worldX - x;
+        const dy = worldY - y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        const impact = params.gamma * Math.exp(-params.k * d) * Math.sin(2 * Math.PI * 0.5 * (t - mouseDownTime));
+        ring.onClickImpact(dx/scale, dy/scale, 0, t);
+      }
+      rippleActive = true;
+    }
+    
+    function triggerBurst(x, y, t) {
+      let energy = 0;
+      const duration = t - mouseDownTime;
+      energy += duration;
+      if (energy >= params.E_critical) {
+        for (let ring of rings) {
+          ring.burst(t);
+        }
+      }
+    }
+    
+    function handleSwipeTrail(endX, endY) {
+      if (trailPoints.length < 3) return;
+      const points = [...trailPoints];
+      points.push({x: endX, y: endY});
+      for (let i = 0; i < points.length; i++) {
+        setTimeout(() => {
+          createSwipeRing(points[i].x, points[i].y, time + i * 0.1);
+        }, i * 100);
+      }
+      trailPoints = [];
+    }
+    
+    function createSwipeRing(x, y, t) {
+      const cx = width / 2;
+      const cy = height / 2;
+      const scale = 0.4;
+      const newRing = new Ring(rings.length);
+      newRing.x = (x - cx) / scale;
+      newRing.y = (y - cy) / scale;
+      newRing.phi = params.phiBase + Math.random() * Math.PI * 2;
+      newRing.update(t);
+      rings.push(newRing);
+      if (rings.length > 80) rings.shift();
+    }
+    
+    canvas.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      shakeAmplitude = 1;
+    });
+    
+    function triggerShake(t) {
+      shakeAmplitude = 1;
+    }
+    
+    function connectRings() {
+      const connections = [];
+      for (let i = 0; i < rings.length; i++) {
+        for (let j = i + 1; j < rings.length; j++) {
+          const a = rings[i];
+          const b = rings[j];
+          if (!a.active || !b.active) continue;
+          const dx = a.rx - b.rx;
+          const dy = a.ry - b.ry;
+          const dz = a.rz - b.rz;
+          const d = Math.sqrt(dx*dx + dy*dy + dz*dz);
+          if (d > params.d_thresh) continue;
+          const deltaPhi = a.phi - b.phi;
+          const resonance = Math.cos(deltaPhi);
+          if (resonance < params.resonance_min) continue;
+          const opacity = 1 - (d / params.d_thresh) * (1 - resonance);
+          connections.push({ a, b, opacity });
+        }
+      }
+      return connections;
+    }
+    
+    function drawConnections(connections, cx, cy, scale) {
+      for (let conn of connections) {
+        const a = conn.a;
+        const b = conn.b;
+        const x1 = cx + a.x * scale;
+        const y1 = cy + a.y * scale * 0.5;
+        const x2 = cx + b.x * scale;
+        const y2 = cy + b.y * scale * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = `rgba(255,255,255,${conn.opacity * 0.4})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.016;
+    
+      // 平滑视角转换
+      viewAngleX += (targetViewAngleX - viewAngleX) * viewTransitionSpeed;
+    
+      ctx.clearRect(0, 0, width, height);
+      const cx = width / 2;
+      const cy = height / 2;
+      const scale = 0.4;
+    
+      // Shake effect
+      if (shakeAmplitude > 0) {
+        const shake = params.R * shakeAmplitude * Math.sin(2 * Math.PI * 0.5 * time);
+        for (let ring of rings) {
+          ring.theta += shake / 100;
+        }
+        shakeAmplitude *= 0.95;
+        if (shakeAmplitude < 0.01) shakeAmplitude = 0;
+      }
+    
+      // Update all rings
+      for (let ring of rings) {
+        ring.update(time);
+      }
+    
+      // Draw connections
+      const connections = connectRings();
+      drawConnections(connections, cx, cy, scale);
+    
+      // Draw rings
+      for (let ring of rings) {
+        ring.draw(ctx, cx, cy, scale);
+      }
+    }
+    
+    animate();
+    </script>
+   
+</body>
+</html>

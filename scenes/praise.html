@@ -158,6 +158,40 @@
             backdrop-filter: blur(5px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             width: 100%;
+            position: relative;
+        }
+
+        .praise-item {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .praise-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .praise-item .why-toggle {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.2);
+            border: none;
+            color: #9CA3AF;
+            cursor: pointer;
+            font-size: 1.2rem;
+            opacity: 1;
+            transition: all 0.3s ease;
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .praise-item .why-toggle:hover {
+            color: #C9F65E;
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .praise-text.show {
@@ -169,6 +203,16 @@
             color: #C9F65E;
             text-shadow: 0 0 10px rgba(201, 246, 94, 0.3);
             font-family: "Ma Shan Zheng", cursive;
+            opacity: 0;
+            height: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .praise-text .cn.show {
+            opacity: 1;
+            height: auto;
+            margin-top: 1rem;
         }
 
         .praise-text .en {
@@ -191,30 +235,6 @@
             opacity: 1;
             height: auto;
             margin-top: 1rem;
-        }
-
-        .why-toggle {
-            position: absolute;
-            bottom: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: none;
-            border: none;
-            color: #9CA3AF;
-            cursor: pointer;
-            font-size: 1.2rem;
-            opacity: 0;
-            transition: all 0.3s ease;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-
-        .why-toggle:hover {
-            color: #C9F65E;
-        }
-
-        .why-toggle.show {
-            opacity: 1;
         }
 
         @keyframes writing {
@@ -356,14 +376,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Dancing+Script:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1 class="page-title">QwQ网页设计
-        <span>夸夸我</span>
+    <h1 class="page-title">
+        <span>compliment me</span>
     </h1>
 
     <div class="nav-spheres">
+        <a href="spiderweb.html" class="nav-sphere">🕸️</a>
+        <a href="#" class="nav-sphere" onclick="switchToNewLove()">NEW</a>
+        <a href="#" class="nav-sphere" onclick="switchToOldLove()">OLD</a>
         <a href="praise.html" class="nav-sphere active">↺</a>
-        <a href="#" class="nav-sphere" onclick="switchToNewLove()">新情书</a>
-        <a href="#" class="nav-sphere" onclick="switchToOldLove()">旧情书</a>
     </div>
 
     <div class="gender-selector">
@@ -371,12 +392,12 @@
         <button class="gender-btn female" onclick="selectGender('female')">♀️</button>
     </div>
 
-    <button class="praise-btn" onclick="showPraise()">夸我</button>
+    <button class="praise-btn" onclick="showPraise()">compliment me</button>
 
     <div class="praise-text">
         <div class="text-container">
-            <div class="cn"></div>
             <div class="en"></div>
+            <div class="cn"></div>
             <div class="why"></div>
         </div>
         <button class="why-toggle">💡</button>
@@ -432,7 +453,7 @@
                 en: "You're not my type—you're the full menu I order when my brain disconnects."
             },
             {
-                cn: "你就是我情绪系统里的bug，每次我想理性一点，你就弹出来说'今天先恋爱吧！'",
+                cn: "你是我情绪系统里的bug，每次我想理性一点，你就弹出来说'今天先恋爱吧！'",
                 en: "You're the bug in my emotional OS. Every time I try to be rational, you pop up saying, 'Let's just fall in love today!'"
             },
             {
@@ -519,7 +540,7 @@
             }
         ];
 
-        let femalealphabetLoveLetters = [
+        let malealphabetLoveLetters = [
             {
                 cn: "你这人倒是没什么本事，就是有本事让我一见你，就不爱搭理别人了。",
                 en: "You're not particularly capable—except at making me lose interest in every other man I meet.",
@@ -573,7 +594,7 @@
         ];
 
 
-        let malealphabetLoveLetters = [
+        let femalealphabetLoveLetters = [
             {
                 cn: "A是上了瘾的那种沉溺，我不是喜欢你，是一想到你，整颗心就开始下沉。",
                 en: "A is for Addicted—I'm not crushing on you, I'm sinking into you. Fully, sweetly, helplessly.",
@@ -757,6 +778,18 @@
         // 初始化数据
         let currentMode = 'new'; // 'new' or 'old'
         
+        // 初始化
+        loadPraises();
+
+        // 处理 URL 参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        if (mode === 'new') {
+            switchToNewLove();
+        } else if (mode === 'old') {
+            switchToOldLove();
+        }
+
         // 切换到新情书模式
         const switchToNewLove = () => {
             currentMode = 'new';
@@ -796,41 +829,48 @@
 
             const praise = currentPraises[Math.floor(Math.random() * currentPraises.length)];
             const praiseText = document.querySelector('.praise-text');
-            const cn = document.querySelector('.praise-text .cn');
-            const en = document.querySelector('.praise-text .en');
-            const why = document.querySelector('.praise-text .why');
-            const whyToggle = document.querySelector('.why-toggle');
-
+            
             praiseText.classList.remove('show');
             
             setTimeout(() => {
-                // 清除旧的内容和类
-                cn.innerHTML = '';
-                en.innerHTML = '';
-                why.innerHTML = '';
-                cn.className = 'cn';
-                en.className = 'en';
-                why.className = 'why';
+                // 创建新的赞美项
+                const praiseItem = document.createElement('div');
+                praiseItem.className = 'praise-item';
 
-                // 创建新的 span 元素用于动画
-                const cnSpan = document.createElement('span');
+                // 创建英文和中文容器
+                const enDiv = document.createElement('div');
+                enDiv.className = 'en';
+                const cnDiv = document.createElement('div');
+                cnDiv.className = 'cn';
+
+                // 创建动画span
                 const enSpan = document.createElement('span');
-                cnSpan.className = 'letter-by-letter';
+                const cnSpan = document.createElement('span');
                 enSpan.className = 'letter-by-letter';
-                cnSpan.textContent = praise.cn;
+                cnSpan.className = 'letter-by-letter';
                 enSpan.textContent = praise.en;
+                cnSpan.textContent = praise.cn;
 
-                // 添加到 DOM
-                cn.appendChild(cnSpan);
-                en.appendChild(enSpan);
-                
-                // 如果有 why 内容，显示 why 按钮和内容
-                if (praise.why) {
-                    why.textContent = praise.why;
-                    whyToggle.classList.add('show');
-                } else {
-                    whyToggle.classList.remove('show');
-                }
+                // 添加到DOM
+                enDiv.appendChild(enSpan);
+                cnDiv.appendChild(cnSpan);
+                praiseItem.appendChild(enDiv);
+                praiseItem.appendChild(cnDiv);
+
+                // 添加灯泡按钮
+                const whyToggle = document.createElement('button');
+                whyToggle.className = 'why-toggle';
+                whyToggle.textContent = '💡';
+                whyToggle.onclick = () => {
+                    cnDiv.classList.toggle('show');
+                    playTypeSound();
+                };
+                praiseItem.appendChild(whyToggle);
+
+                // 清空容器并添加新内容
+                const container = document.querySelector('.text-container');
+                container.innerHTML = '';
+                container.appendChild(praiseItem);
                 
                 praiseText.classList.add('show');
 
@@ -953,16 +993,6 @@
             audio.volume = 0.1;
             audio.play();
         }
-
-        // 添加 why 切换功能
-        document.querySelector('.why-toggle').addEventListener('click', () => {
-            const why = document.querySelector('.praise-text .why');
-            why.classList.toggle('show');
-            playTypeSound();
-        });
-
-        // 初始化
-        loadPraises();
     </script>
 </body>
 </html> 
