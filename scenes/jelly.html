@@ -27,20 +27,50 @@
             z-index: 2;
             white-space: pre;
         }
+
+        #controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            color: white;
+            z-index: 10;
+            font-family: sans-serif;
+        }
+
+        #scaleValue {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-<canvas id="c"></canvas>
+  <canvas id="c" tabindex="0" style="touch-action: none;"></canvas>
+
+
 <div id="debug" style="display:none;">Debug Info</div>
+<div id="controls">
+  缩放倍数：
+  <input type="range" id="scaleSlider" min="0.2" max="2" step="0.1" value="1">
+  <span id="scaleValue">1.0</span>
+</div>
+
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const debugDiv = document.getElementById('debug');
+const slider = document.getElementById('scaleSlider');
+const scaleValue = document.getElementById('scaleValue');
+
+let viewScale = parseFloat(slider.value);
+slider.addEventListener('input', () => {
+    viewScale = parseFloat(slider.value);
+    scaleValue.textContent = viewScale.toFixed(1);
+});
 
 let width, height, cx, cy, particles = [], touchPoints = [],
     shakeOffsetX = 0, shakeOffsetY = 0;
 
-// 新增全局变量
 let globalRotationX = 0;
 let globalYOffset = 0;
 let isLongPress = false;
@@ -49,13 +79,10 @@ let lastTouch = {x:0, y:0, time:0};
 let pulseScale = 1.0;
 let pressStartTime = 0;
 let longPressBrightnessFactor = 0.0;
+let lifecycleStage = 'active';
 
-// 生命周期相关
-let lifecycleStage = 'active'; // 可选值：'active', 'decay', 'fade'
-
-// 配置参数
 const config = {
-    count: 150,
+    count: 80,
     speed: 0.005,
     a: 0.3,
     n: 5,
@@ -80,11 +107,9 @@ const config = {
     trailAlpha: 0.15,
     trailLength: 10,
     debug: false,
-    bgAlpha: 0.05,
+    bgAlpha: 0.1,
     pulseStrength: 1.5,
     pulseDuration: 500,
-
-    // 自动衰减阈值
     velocityThreshold: 0.1,
     alphaThreshold: 0.05
 };
@@ -97,65 +122,47 @@ function resize() {
     cx = width / 2;
     cy = height / 2;
 }
-resize();
+resize(); 
+// addEventListener('resize', resize);
 addEventListener('resize', resize);
 
-// 极光织网方程（带旋转）
 function auroraEquation(t, i) {
     const θ = i * 0.3 + t * 0.01;
     const nt = t * config.speed;
-    const r = config.r * 100 * 3.5;
-    const a = config.a * 100 * 3.5;
+    const r = config.r * 100 * viewScale;
+    const a = config.a * 100 * viewScale;
 
     let x = (r + a * Math.cos(config.n * θ + nt)) * Math.cos(θ);
     let y = (r + a * Math.cos(config.n * θ + nt)) * Math.sin(θ);
     let z = a * Math.sin(config.n * θ + nt);
 
-    // 添加 X 轴旋转
     const cosRx = Math.cos(globalRotationX);
     const sinRx = Math.sin(globalRotationX);
-
     const newY = y * cosRx - z * sinRx;
     const newZ = y * sinRx + z * cosRx;
-    y = newY;
-    z = newZ;
-
-    return {x, y, z};
+    return {x, y: newY, z: newZ};
 }
 
-// 将 HSL 转换为 CSS 字符串
 function hslToCss(h, s, l, a = 1) {
     return `hsla(${h}, ${s}%, ${l}%, ${a})`;
 }
 
-// 获取渐变颜色（使用 HSL）
 function getGradientColor(t, phase = 0) {
     const preset = config.colorPresets[config.currentPreset];
     const waveRatio = (Math.sin((t * config.colorChangeSpeed) + phase) + 1) / 2;
 
-    const hStart = preset.startHSL[0];
-    const hEnd = preset.endHSL[0];
-    const h = hStart + (hEnd - hStart) * waveRatio;
-
-    const sStart = preset.startHSL[1];
-    const sEnd = preset.endHSL[1];
-    let s = sStart + (sEnd - sStart) * waveRatio;
+    const h = preset.startHSL[0] + (preset.endHSL[0] - preset.startHSL[0]) * waveRatio;
+    let s = preset.startHSL[1] + (preset.endHSL[1] - preset.startHSL[1]) * waveRatio;
     s = Math.min(config.maxSaturation, Math.max(10, s));
-
     const dynamicSaturation = config.saturationRange * Math.sin(t * 0.003 + phase) * 100;
     s = Math.min(config.maxSaturation, Math.max(10, s + dynamicSaturation));
 
-    if (isLongPress) {
-        s *= (1 - longPressBrightnessFactor * 0.8);
-    }
+    if (isLongPress) s *= (1 - longPressBrightnessFactor * 0.8);
 
     const brightnessBase = config.baseBrightness + config.brightnessRange * Math.sin(t * 0.002 + phase);
     const brightnessPulse = 0.1 * Math.sin(t * 0.005 + phase);
     let l = Math.floor(Math.min(95, Math.max(5, (brightnessBase + brightnessPulse) * 100)));
-
-    if (isLongPress) {
-        l = Math.min(100, l + 30 * longPressBrightnessFactor);
-    }
+    if (isLongPress) l = Math.min(100, l + 30 * longPressBrightnessFactor);
 
     return hslToCss(h % 360, s, l, 0.5);
 }
@@ -164,16 +171,7 @@ function initParticles() {
     particles = [];
     for (let i = 0; i < config.count; i++) {
         const pos = auroraEquation(0, i);
-        particles.push({
-            x: pos.x,
-            y: pos.y,
-            z: pos.z,
-            vx: 0,
-            vy: 0,
-            vz: 0,
-            history: [],
-            alpha: 1
-        });
+        particles.push({ x: pos.x, y: pos.y, z: pos.z, vx: 0, vy: 0, vz: 0, history: [], alpha: 1 });
     }
     lifecycleStage = 'active';
 }
@@ -185,59 +183,42 @@ function updateParticles(t) {
         p.vy = (newPos.y - p.y) * 0.1;
         p.vz = (newPos.z - p.z) * 0.1;
 
-        // 添加交互扰动
         for (let touch of touchPoints) {
             const dx = p.x - touch.worldX;
             const dy = p.y - touch.worldY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < config.connectRadius * 1.5) {
-                const force = (config.connectRadius * 1.5 - dist) / (config.connectRadius * 1.5) * touch.force;
+            if (dist < config.connectRadius * 1.5 * viewScale) {
+                const force = (config.connectRadius * 1.5 * viewScale - dist) / (config.connectRadius * 1.5 * viewScale) * touch.force;
                 p.vx += dx / dist * force;
                 p.vy += dy / dist * force;
             }
         }
 
-        // 更新位置
         p.x += p.vx;
         p.y += p.vy;
         p.z += p.vz;
-
-        // 记录历史轨迹用于残影
         p.history.unshift({x: p.x, y: p.y, z: p.z});
         if (p.history.length > config.trailLength) p.history.pop();
 
-        // 阻尼衰减
         p.vx *= config.decayRate;
         p.vy *= config.decayRate;
         p.vz *= config.decayRate;
 
-        // 根据生命周期阶段调整透明度
-        if (lifecycleStage === 'decay') {
-            p.alpha = Math.max(0, p.alpha - 0.005);
-        } else if (lifecycleStage === 'fade') {
-            p.alpha = Math.max(0, p.alpha - 0.01);
-        }
+        if (lifecycleStage === 'decay') p.alpha = Math.max(0, p.alpha - 0.005);
+        else if (lifecycleStage === 'fade') p.alpha = Math.max(0, p.alpha - 0.01);
     }
 }
 
-// 键盘调试切换
-document.addEventListener('keydown', e => {
-    if (e.code === 'KeyD') {
-        config.debug = !config.debug;
-        debugDiv.style.display = config.debug ? 'block' : 'none';
-    }
-    if (e.code === 'KeyC') {
-        config.currentPreset = (config.currentPreset + 1) % config.colorPresets.length;
-    }
-});
-
-// pointerdown 事件处理
 canvas.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    const worldX = (e.clientX - cx) * 3 / viewScale;
+    const worldY = (e.clientY - cy) * 3 / viewScale;
+
     lastTouch = {
         x: e.clientX,
         y: e.clientY,
-        worldX: (e.clientX - cx) * 3 / 3.5,
-        worldY: (e.clientY - cy) * 3 / 3.5,
+        worldX,
+        worldY,
         time: performance.now()
     };
 
@@ -251,10 +232,10 @@ canvas.addEventListener('pointerdown', e => {
         config.colorChangeSpeed *= 1.5;
 
         for (let p of particles) {
-            const dx = p.x - lastTouch.worldX;
-            const dy = p.y - lastTouch.worldY;
+            const dx = p.x - worldX;
+            const dy = p.y - worldY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < config.connectRadius * 1.5) {
+            if (dist < config.connectRadius * 1.5 * viewScale) {
                 p.vx += (dx / dist) * 5;
                 p.vy += (dy / dist) * 5;
             }
@@ -262,36 +243,38 @@ canvas.addEventListener('pointerdown', e => {
     }, 500);
 });
 
-// pointerup 事件处理
-canvas.addEventListener('pointerup', () => {
+canvas.addEventListener('pointerup', e => {
+    e.preventDefault();
     clearTimeout(longPressTimer);
-
     if (isLongPress) {
         config.colorChangeSpeed /= 1.5;
         isLongPress = false;
-
         pulseScale = config.pulseStrength;
     }
-
     touchPoints = [];
 });
 
-// 禁用右键菜单，并添加生命周期控制
+
+
 canvas.addEventListener('contextmenu', e => {
     e.preventDefault();
-
-    if (lifecycleStage === 'active') {
-        lifecycleStage = 'decay';
-    } else if (lifecycleStage === 'decay') {
-        lifecycleStage = 'fade';
-    } else if (lifecycleStage === 'fade') {
-        initParticles();
-    }
+    if (lifecycleStage === 'active') lifecycleStage = 'decay';
+    else if (lifecycleStage === 'decay') lifecycleStage = 'fade';
+    else if (lifecycleStage === 'fade') initParticles();
 });
 
-// wheel 滚轮事件处理
 canvas.addEventListener('wheel', e => {
     globalRotationX += e.deltaY * 0.001;
+});
+
+document.addEventListener('keydown', e => {
+    if (e.code === 'KeyD') {
+        config.debug = !config.debug;
+        debugDiv.style.display = config.debug ? 'block' : 'none';
+    }
+    if (e.code === 'KeyC') {
+        config.currentPreset = (config.currentPreset + 1) % config.colorPresets.length;
+    }
 });
 
 function drawConnections(t) {
@@ -299,27 +282,22 @@ function drawConnections(t) {
     for (let i = 0; i < particles.length; i++) {
         const p1 = particles[i];
         const phase1 = i * 0.3 + currentPhase;
-
         for (let j = i + 1; j < particles.length; j++) {
             const p2 = particles[j];
-            const phase2 = j * 0.3 + currentPhase;
-            const phase = (phase1 + phase2) * 0.5;
-
             const dx = p1.x - p2.x;
             const dy = p1.y - p2.y;
             const dz = p1.z - p2.z;
             const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-            if (dist < config.connectRadius && p1.alpha > 0 && p2.alpha > 0) {
-                ctx.strokeStyle = getGradientColor(t, phase);
-                ctx.lineWidth = config.maxLineWidth * (1 - dist / config.connectRadius) * Math.min(p1.alpha, p2.alpha);
-
-                const scale1 = 1 / (1 + p1.z / (300 * 3.5));
-                const scale2 = 1 / (1 + p2.z / (300 * 3.5));
-                const screenX1 = cx + p1.x * scale1 + shakeOffsetX;
-                const screenY1 = cy + (p1.y * scale1) + globalYOffset * 100 + shakeOffsetY;
-                const screenX2 = cx + p2.x * scale2 + shakeOffsetX;
-                const screenY2 = cy + (p2.y * scale2) + globalYOffset * 100 + shakeOffsetY;
+            if (dist < config.connectRadius * viewScale && p1.alpha > 0 && p2.alpha > 0) {
+                ctx.strokeStyle = getGradientColor(t, (phase1 + j * 0.3 + currentPhase) * 0.5);
+                ctx.lineWidth = config.maxLineWidth * (1 - dist / (config.connectRadius * viewScale)) * Math.min(p1.alpha, p2.alpha);
+                const scale1 = 1 / (1 + p1.z / (300 * viewScale));
+                const scale2 = 1 / (1 + p2.z / (300 * viewScale));
+                const screenX1 = cx + p1.x * scale1 * viewScale + shakeOffsetX;
+                const screenY1 = cy + p1.y * scale1 * viewScale + globalYOffset * 100 + shakeOffsetY;
+                const screenX2 = cx + p2.x * scale2 * viewScale + shakeOffsetX;
+                const screenY2 = cy + p2.y * scale2 * viewScale + globalYOffset * 100 + shakeOffsetY;
 
                 ctx.moveTo(screenX1, screenY1);
                 ctx.lineTo(screenX2, screenY2);
@@ -340,54 +318,37 @@ function animate(t) {
         fps = frameCount;
         frameCount = 0;
         lastFrameTime = t;
-
         if (config.debug) {
-            debugDiv.textContent = `
-Lifecycle: ${lifecycleStage}
-FPS: ${fps}
-Current Color: ${config.colorPresets[config.currentPreset].name}
-                            `.trim();
+            debugDiv.textContent = `Lifecycle: ${lifecycleStage}\nFPS: ${fps}\nCurrent Color: ${config.colorPresets[config.currentPreset].name}`;
         }
     }
 
-    // 半透明覆盖层保留残影
     ctx.fillStyle = `rgba(0,0,0,${config.bgAlpha})`;
     ctx.fillRect(0, 0, width, height);
-
     updateParticles(t);
 
-    // 自动阶段转换逻辑
     if (lifecycleStage === 'active') {
-        const avgVelocity = particles.reduce((sum, p) => sum + Math.hypot(p.vx, p.vy), 0) / particles.length;
-        if (avgVelocity < config.velocityThreshold) {
-            lifecycleStage = 'decay';
-        }
+        const avgV = particles.reduce((sum, p) => sum + Math.hypot(p.vx, p.vy), 0) / particles.length;
+        if (avgV < config.velocityThreshold) lifecycleStage = 'decay';
     } else if (lifecycleStage === 'decay') {
-        const avgAlpha = particles.reduce((sum, p) => sum + p.alpha, 0) / particles.length;
-        if (avgAlpha < config.alphaThreshold) {
-            lifecycleStage = 'fade';
-        }
+        const avgA = particles.reduce((sum, p) => sum + p.alpha, 0) / particles.length;
+        if (avgA < config.alphaThreshold) lifecycleStage = 'fade';
     } else if (lifecycleStage === 'fade') {
-        const avgAlpha = particles.reduce((sum, p) => sum + p.alpha, 0) / particles.length;
-        if (avgAlpha <= 0) {
-            initParticles();
-        }
+        const avgA = particles.reduce((sum, p) => sum + p.alpha, 0) / particles.length;
+        if (avgA <= 0) initParticles();
     }
 
-    // 应用晃动偏移
     if (isShaking) {
-        shakeOffsetX = (Math.random() - 0.5) * 15 * 3.5;
-        shakeOffsetY = (Math.random() - 0.5) * 15 * 3.5;
+        shakeOffsetX = (Math.random() - 0.5) * 15 * viewScale;
+        shakeOffsetY = (Math.random() - 0.5) * 15 * viewScale;
     } else {
         shakeOffsetX *= 0.9;
         shakeOffsetY *= 0.9;
     }
 
-    // 处理长按增亮逻辑
     if (isLongPress) {
         const now = performance.now();
-        const duration = now - pressStartTime;
-        longPressBrightnessFactor = Math.min(1.0, duration / 1000);
+        longPressBrightnessFactor = Math.min(1.0, (now - pressStartTime) / 1000);
     }
 
     ctx.save();
@@ -399,6 +360,10 @@ Current Color: ${config.colorPresets[config.currentPreset].name}
 }
 
 initParticles();
+window.onload = () => {
+    canvas.focus();
+};
+ // 新增，确保canvas能接收事件
 requestAnimationFrame(animate);
 </script>
 </body>
