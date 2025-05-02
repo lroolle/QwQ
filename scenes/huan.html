@@ -37,7 +37,7 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const debugDiv = document.getElementById('debug');
 
-let width, height, cx, cy, particles = [], touchPoints = [],
+let width, height, cx, cy, jellyWaves = [], particles = [], touchPoints = [],
     shakeOffsetX = 0, shakeOffsetY = 0;
 
 // 新增全局变量
@@ -185,6 +185,21 @@ function updateParticles(t) {
         p.vy = (newPos.y - p.y) * 0.1;
         p.vz = (newPos.z - p.z) * 0.1;
 
+        // ✨ Q弹果冻扰动 ✨
+        for (let wave of jellyWaves) {
+            const dx = p.x - wave.x;
+            const dy = p.y - wave.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 250) { // Q弹影响范围更大
+    const tElapsed = (t - wave.time) / 60; // 让波动更慢更柔
+    const force = Math.sin(tElapsed - dist / 20) * 10 * (1 - dist / 250); // 放大振幅更Q弹
+    p.vx += (dx / dist) * force;
+    p.vy += (dy / dist) * force;
+}
+
+        }
+
         // 添加交互扰动
         for (let touch of touchPoints) {
             const dx = p.x - touch.worldX;
@@ -202,16 +217,16 @@ function updateParticles(t) {
         p.y += p.vy;
         p.z += p.vz;
 
-        // 记录历史轨迹用于残影
-        p.history.unshift({x: p.x, y: p.y, z: p.z});
+        // 历史轨迹更新
+        p.history.unshift({ x: p.x, y: p.y, z: p.z });
         if (p.history.length > config.trailLength) p.history.pop();
 
-        // 阻尼衰减
+        // 衰减
         p.vx *= config.decayRate;
         p.vy *= config.decayRate;
         p.vz *= config.decayRate;
 
-        // 根据生命周期阶段调整透明度
+        // 生命周期 alpha 衰减
         if (lifecycleStage === 'decay') {
             p.alpha = Math.max(0, p.alpha - 0.005);
         } else if (lifecycleStage === 'fade') {
@@ -219,6 +234,7 @@ function updateParticles(t) {
         }
     }
 }
+
 
 // 键盘调试切换
 document.addEventListener('keydown', e => {
@@ -233,6 +249,13 @@ document.addEventListener('keydown', e => {
 
 // pointerdown 事件处理
 canvas.addEventListener('pointerdown', e => {
+    
+    jellyWaves.push({
+    x: (e.clientX - cx) * 3 / 3.5,
+    y: (e.clientY - cy) * 3 / 3.5,
+    time: performance.now()
+    });
+
     lastTouch = {
         x: e.clientX,
         y: e.clientY,
@@ -336,6 +359,7 @@ let isShaking = false;
 
 function animate(t) {
     frameCount++;
+    jellyWaves = jellyWaves.filter(w => (t - w.time) < 1000); // 每个Q弹最多持续1秒
     if (t - lastFrameTime >= 1000) {
         fps = frameCount;
         frameCount = 0;
