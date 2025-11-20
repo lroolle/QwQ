@@ -131,73 +131,97 @@
 
       // --- COMPONENTS ---
 
-      const LoadingAnimation = () => {
-        return (
-          <div className="flex items-center justify-center gap-1.5 py-2 opacity-50">
-             <motion.div 
-               className="w-1.5 h-1.5 bg-stone-800 rounded-full"
-               animate={{ y: [0, -2, 0], opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-               transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", delay: 0 }}
-             />
-             <motion.div 
-               className="w-1.5 h-1.5 bg-stone-800 rounded-full"
-               animate={{ y: [0, -2, 0], opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-               transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", delay: 0.15 }}
-             />
-             <motion.div 
-               className="w-1.5 h-1.5 bg-stone-800 rounded-full"
-               animate={{ y: [0, -2, 0], opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-               transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
-             />
-             <motion.div 
-               className="w-1.5 h-1.5 bg-stone-800 rounded-full"
-               animate={{ y: [0, -2, 0], opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-               transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", delay: 0.45 }}
-             />
-             <motion.div 
-               className="w-1.5 h-1.5 bg-stone-800 rounded-full"
-               animate={{ y: [0, -2, 0], opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
-               transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", delay: 0.6 }}
-             />
-          </div>
-        );
-      };
+      const AnthologyTypewriter = ({ text }) => {
+         const [visibleCount, setVisibleCount] = useState(0);
+         
+         // Tokenize text: split by markers <>, {}, ** and \n
+         const { tokens, fullLength } = React.useMemo(() => {
+             if (!text) return { tokens: [], fullLength: 0 };
+             
+             const t = [];
+             const lines = text.split('\n');
+             lines.forEach((line, i) => {
+                 // Split by multiple delimiters
+                 const parts = line.split(/([<{*].*?[>}\*])/g);
+                 parts.forEach(part => {
+                     if (!part) return;
+                     if (part.match(/^<.*>$/)) {
+                        t.push({ text: part.slice(1, -1), type: 'italic' });
+                     } else if (part.match(/^\{.*\}$/)) {
+                        t.push({ text: part.slice(1, -1), type: 'bold' });
+                     } else if (part.match(/^\*.*\*$/)) {
+                        t.push({ text: part.slice(1, -1), type: 'highlight' });
+                     } else {
+                         t.push({ text: part, type: 'normal' });
+                     }
+                 });
+                 if (i < lines.length - 1) t.push({ text: '\n', type: 'newline' });
+             });
+             
+             const len = t.reduce((acc, token) => acc + (token.type === 'newline' ? 1 : token.text.length), 0);
+             return { tokens: t, fullLength: len };
+         }, [text]);
 
-      const PoeticText = ({ text }) => {
-        if (!text) return <LoadingAnimation />;
-        const lines = text.split(/\n/);
-        return (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            transition={{ duration: 0.8 }}
-            className="flex flex-col gap-1.5 items-center w-full"
-          >
-            {lines.map((line, i) => (
-              <div key={i} className="text-center leading-relaxed break-words w-full">
-                 {renderLine(line)}
-              </div>
-            ))}
-          </motion.div>
-        );
-      };
+         // Typing Animation
+         useEffect(() => {
+             setVisibleCount(0);
+             if (!fullLength) return;
 
-      const renderLine = (line) => {
-        const parts = line.split(/([<{*].*?[>}\*])/g);
-        return parts.map((part, idx) => {
-          if (!part) return null;
-          
-          if (part.match(/^<.*>$/)) {
-            return <span key={idx} className="font-serif italic text-[15px] text-black mx-0.5">{part.slice(1,-1)}</span>;
-          }
-          if (part.match(/^\{.*\}$/)) {
-             return <span key={idx} className="font-sans font-bold text-[10px] uppercase tracking-widest mx-0.5 text-stone-800">{part.slice(1,-1)}</span>;
-          }
-          if (part.match(/^\*.*\*$/)) {
-             return <span key={idx} className="font-serif text-[14px] mx-0.5 border-b-2 border-yellow-200/80 px-0.5">{part.slice(1,-1)}</span>;
-          }
-          return <span key={idx} className="font-serif text-[13px] text-stone-600">{part}</span>;
-        });
+             const interval = setInterval(() => {
+                 setVisibleCount(prev => {
+                     if (prev >= fullLength) {
+                         clearInterval(interval);
+                         return prev;
+                     }
+                     return prev + 1;
+                 });
+             }, 35); 
+             return () => clearInterval(interval);
+         }, [text, fullLength]);
+
+         let budget = visibleCount;
+         
+         return (
+            <div className="flex flex-col gap-1.5 items-center w-full">
+                {/* We need to reconstruct lines from tokens for layout */}
+                {/* Since tokens are flat, we group them by newline for the 'div' structure */}
+                {(() => {
+                    const renderedLines = [];
+                    let currentLine = [];
+                    
+                    tokens.forEach((token, i) => {
+                        if (budget <= 0) return;
+
+                        if (token.type === 'newline') {
+                            budget--;
+                            renderedLines.push(currentLine);
+                            currentLine = [];
+                            return;
+                        }
+
+                        const showTxt = token.text.slice(0, budget);
+                        budget -= showTxt.length;
+                        
+                        let styleClass = "font-serif text-[13px] text-stone-600";
+                        if (token.type === 'italic') styleClass = "font-serif italic text-[15px] text-black mx-0.5";
+                        if (token.type === 'bold') styleClass = "font-sans font-bold text-[10px] uppercase tracking-widest mx-0.5 text-stone-800";
+                        if (token.type === 'highlight') styleClass = "font-serif text-[14px] mx-0.5 border-b-2 border-yellow-200/80 px-0.5 text-stone-900";
+
+                        currentLine.push(
+                            <span key={i} className={styleClass}>{showTxt}</span>
+                        );
+                    });
+                    if (currentLine.length > 0) renderedLines.push(currentLine);
+
+                    return renderedLines.map((lineContent, i) => (
+                         <div key={i} className="text-center leading-relaxed break-words w-full">
+                            {lineContent}
+                         </div>
+                    ));
+                })()}
+                {visibleCount < fullLength && <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-pulse mt-1"></div>}
+            </div>
+         );
       };
 
       const PhotoCard = ({ photo, onDelete, onUpdateCaption, onDragEnd, browserLang, apiKey }) => {
@@ -276,12 +300,12 @@
             <div className="flex flex-col items-center justify-center w-full min-h-[2.5rem]">
                {isEditing ? (
                   <div className="w-full relative" onPointerDown={(e) => e.stopPropagation()}>
-                      <textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="w-full font-serif text-sm bg-stone-50 p-2 border border-stone-200 focus:outline-none focus:border-stone-400 transition-colors" rows={3} autoFocus />
+                      <textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="w-full font-serif text-sm bg-stone-50 p-2 border border-stone-200 focus:outline-none" rows={3} autoFocus />
                       <button onClick={() => { onUpdateCaption(photo.id, editText); setIsEditing(false); }} className="absolute bottom-1 right-1 text-stone-500 hover:text-stone-800"><Check size={12} /></button>
                   </div>
                ) : (
                   <div onDoubleClick={() => setIsEditing(true)} className="cursor-text w-full px-1">
-                     <PoeticText text={photo.caption || (isRegenerating ? "..." : "...")} />
+                     {photo.caption ? <AnthologyTypewriter text={photo.caption} /> : <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-pulse"></div>}
                   </div>
                )}
             </div>
@@ -410,10 +434,9 @@
                     {/* Lens Branding */}
                     <div className="h-8 flex items-center justify-between px-4 bg-[#efede8] border-b border-[#d6d3cd]">
                          <span className="font-sans text-[7px] tracking-[0.2em] text-stone-400">ANTHOLOGY OPTICS</span>
-                         <div className="flex gap-1">
-                             <div className="w-1.5 h-1.5 rounded-full bg-stone-300"></div>
-                             <div className="w-1.5 h-1.5 rounded-full bg-stone-300"></div>
-                         </div>
+                         <button onClick={() => setShowApiKeyModal(true)} className="w-5 h-5 flex items-center justify-center text-stone-400 hover:text-stone-800 transition-colors" title="API Key">
+                            <Key size={10} />
+                         </button>
                     </div>
                     
                     {/* Screen */}
@@ -437,11 +460,7 @@
                 </div>
             </div>
 
-            {/* SETTINGS */}
-            <div className="fixed top-8 right-8 z-50">
-                 <button onClick={() => setShowApiKeyModal(true)} className="w-8 h-8 rounded-full border border-stone-200 bg-white/60 backdrop-blur-sm flex items-center justify-center hover:bg-stone-800 hover:text-white transition-all"><Key size={12} /></button>
-            </div>
-
+            {/* SETTINGS - Moved to Camera Body */}
             {/* MODAL */}
             {showApiKeyModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#fdfbf7]/90 backdrop-blur-sm">
