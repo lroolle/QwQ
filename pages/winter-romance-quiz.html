@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter Romance Quiz</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-gradient: radial-gradient(circle at 50% 0%, #1e293b, #0f172a);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-blue: #38bdf8;
+            --accent-warm: #fda4af;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background: var(--bg-dark);
+            background-image: var(--bg-gradient);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Snow Effect (Pure CSS) --- */
+        .snow, .snow:after, .snow:before {
+            content: "";
+            position: absolute;
+            top: -650px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(4px 4px at 100px 50px, #fff, transparent), 
+                radial-gradient(6px 6px at 200px 150px, #fff, transparent), 
+                radial-gradient(3px 3px at 300px 250px, #fff, transparent),
+                radial-gradient(4px 4px at 400px 350px, #fff, transparent),
+                radial-gradient(6px 6px at 500px 100px, #fff, transparent),
+                radial-gradient(3px 3px at 50px 200px, #fff, transparent),
+                radial-gradient(4px 4px at 150px 300px, #fff, transparent),
+                radial-gradient(6px 6px at 250px 400px, #fff, transparent),
+                radial-gradient(6px 6px at 350px 500px, #fff, transparent);
+            background-size: 650px 650px;
+            animation: snowAnim 15s linear infinite;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .snow:after { margin-left: -250px; opacity: 0.2; animation-duration: 25s; animation-direction: reverse; filter: blur(2px); }
+        .snow:before { margin-left: -350px; opacity: 0.1; animation-duration: 35s; filter: blur(3px); }
+
+        @keyframes snowAnim {
+            from { transform: translateY(0); }
+            to { transform: translateY(650px); }
+        }
+
+        /* --- Main Card --- */
+        .card {
+            width: 90%;
+            max-width: 500px;
+            min-height: 500px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- Question View --- */
+        .quiz-view {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.3;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 16px 20px;
+            border-radius: 12px;
+            color: var(--text-main);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateX(5px);
+        }
+
+        .option-btn .letter {
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-right: 15px;
+            font-size: 1.1rem;
+        }
+
+        /* --- Result View (Hidden Initially) --- */
+        .result-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+        }
+
+        .result-view.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            align-self: flex-start;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #fff;
+        }
+
+        .result-desc {
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .keyword {
+            color: var(--accent-warm);
+            font-weight: 600;
+        }
+
+        .restart-btn {
+            margin-top: auto;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        .restart-btn:hover {
+            border-color: var(--text-main);
+            color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Hide standard view when result is active */
+        .quiz-view.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="snow"></div>
+
+    <div class="card">
+        <!-- VIEW 1: QUESTION -->
+        <div class="quiz-view" id="quizView">
+            <div>
+                <div class="subtitle">❄️ 冬日灵魂拷问</div>
+                <div class="title">为什么一到冬天<br>就特别想谈恋爱？</div>
+            </div>
+
+            <div class="options">
+                <div class="option-btn" onclick="showResult('A')">
+                    <span class="letter">A</span>
+                    <span>基因觉得冷 (皮肤饥渴)</span>
+                </div>
+                <div class="option-btn" onclick="showResult('B')">
+                    <span class="letter">B</span>
+                    <span>年底KPI没达标 (焦虑清算)</span>
+                </div>
+                <div class="option-btn" onclick="showResult('C')">
+                    <span class="letter">C</span>
+                    <span>春节抗唠叨盾牌 (防御机制)</span>
+                </div>
+                <div class="option-btn" onclick="showResult('D')">
+                    <span class="letter">D</span>
+                    <span>脑子缺多巴胺 (生化危机)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: RESULT (Dynamic) -->
+        <div class="result-view" id="resultView">
+            <div class="tag" id="resTag">心理学关键词</div>
+            <div class="result-title" id="resTitle">Headline</div>
+            <div class="result-desc" id="resDesc">Description goes here...</div>
+            <button class="restart-btn" onclick="resetQuiz()">↺ 再测一次</button>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            'A': {
+                tag: "依恋理论 / 皮肤饥渴",
+                title: "你需要的不是性，是拥抱",
+                desc: "你的潜意识渴望回归婴儿般的安全感。冬天模拟了无助的寒冷环境，你急需通过<span class='keyword'>肢体接触</span>来降低压力激素。你不是想恋爱，你是想找个恒温抱枕。"
+            },
+            'B': {
+                tag: "存在主义焦虑 / 完形心理",
+                title: "恋爱成了你的人生KPI",
+                desc: "你是一个完美主义者。你对时间的流逝感到恐慌，试图通过建立关系来证明今年<span class='keyword'>“没有虚度”</span>。小心，别把恋爱当成一种功利性的年终总结。"
+            },
+            'C': {
+                tag: "社会顺应 / 回避型应对",
+                title: "为了耳根清净的求生欲",
+                desc: "你活得很现实。你不是真的渴望亲密关系，而是想通过恋爱获得<span class='keyword'>“正常人”</span>的标签，建立一道防御七大姑八大姨的血肉长城。"
+            },
+            'D': {
+                tag: "SAD 季节性情绪失调",
+                title: "把你当成了抗抑郁药",
+                desc: "日照变短让你褪黑素激增、情绪低落。你潜意识里把恋爱当成了<span class='keyword'>“人形多巴胺提取机”</span>。建议先多晒太阳，别把治愈自己的责任推给别人。"
+            }
+        };
+
+        const quizView = document.getElementById('quizView');
+        const resultView = document.getElementById('resultView');
+        const resTag = document.getElementById('resTag');
+        const resTitle = document.getElementById('resTitle');
+        const resDesc = document.getElementById('resDesc');
+
+        function showResult(option) {
+            // Populate Data
+            const info = data[option];
+            resTag.innerText = info.tag;
+            resTitle.innerText = info.title;
+            resDesc.innerHTML = info.desc;
+
+            // Animation Switch
+            quizView.classList.add('hidden');
+            setTimeout(() => {
+                resultView.classList.add('active');
+            }, 200);
+        }
+
+        function resetQuiz() {
+            resultView.classList.remove('active');
+            setTimeout(() => {
+                quizView.classList.remove('hidden');
+            }, 200);
+        }
+    </script>
+</body>
+</html>
