@@ -11,6 +11,7 @@ app.use((req, res, next) => {
 // 设置静态文件目录：当前根目录 + scenes 目录
 app.use(express.static(path.join(__dirname)));
 app.use('/scenes', express.static(path.join(__dirname, 'scenes')));
+app.use('/pages', express.static(path.join(__dirname, 'pages')));
 
 // 主页路由：返回 index.html
 app.get('/', (req, res) => {
